@@ -1,85 +1,89 @@
 import streamlit as st
 import random
 import os
+import time
 
-# --- CONFIGURAÇÃO ---
-st.set_page_config(page_title="KAMILLY WORLD", layout="wide")
+# --- ENGINE GRÁFICA AETHER ---
+st.set_page_config(page_title="KAMILLY WORLD GLOBAL", layout="wide")
 
-# --- MAPEAMENTO OFICIAL DAS FOTOS QUE VOCÊ FEZ ---
-fotos_familia = {
-    "Kamilly 👑": "kamilly.jpg",
-    "Papai Rick 🧔": "papai.jpg",
-    "Mamãe Michele 💙": "mamae.jpg",
-    "Kauan 🤙": "kauan.jpg",
-    "Tio MK 🍻": "tio_mk.jpg",
-    "Tio Michel 🤵": "tio_michel.jpg",
-    "Padrinho 🤟": "tio_padrinho.jpg",
-    "Vovó Diva 🌸": "vova_diva.jpg",
-    "Vovô Geraldo 🤠": "vovo_geraldo.jpg",
-    "Vovô Mário 👨🏻‍🦱": "vovo_mario.jpg",
-    "Vovó Neusa 🌸": "vovo_neusa.jpg"
-}
-
-# --- DESIGN ESTILO TILE EXPLORER ---
+# ESTILIZAÇÃO DE APP NATIVO (KOTLIN/UNITY STYLE)
 st.markdown("""
     <style>
-    .main { background: linear-gradient(180deg, #6a11cb 0%, #2575fc 100%); }
-    .slot-bar {
-        background: rgba(255, 255, 255, 0.2);
-        border: 3px solid white; border-radius: 20px;
-        padding: 15px; display: flex; justify-content: center;
-        min-height: 120px; margin-bottom: 20px; gap: 10px;
+    .main { background: #121212; color: white; }
+    .level-bar {
+        background: linear-gradient(90deg, #FF0080 0%, #7928CA 100%);
+        padding: 10px; border-radius: 50px; text-align: center;
+        font-weight: bold; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(255,0,128,0.4);
+    }
+    .tile-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px; padding: 10px; transition: 0.3s;
     }
     .stButton>button {
-        height: 100px !important; width: 100px !important;
-        border-radius: 15px; border: 3px solid white;
-        background-color: white; box-shadow: 0 6px 0 #bbb;
+        background: #FFFFFF !important; color: #000 !important;
+        border-radius: 12px !important; font-weight: bold !important;
+        border: none !important; box-shadow: 0 4px 0 #bbb !important;
     }
+    .stButton>button:hover { transform: scale(1.05); box-shadow: 0 6px 0 #999 !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- LÓGICA DO JOGO ---
-if 'selecionados' not in st.session_state: st.session_state.selecionados = []
-if 'tabuleiro' not in st.session_state:
-    itens = list(fotos_familia.keys()) * 2 
-    random.shuffle(itens)
-    st.session_state.tabuleiro = itens
+# --- BANCO DE DADOS (DATABASE) ---
+parentes = {
+    "Papai Rick": "papai.jpg", "Kamilly": "kamilly.jpg", 
+    "Mamãe": "mamae.jpg", "Kauan": "kauan.jpg",
+    "Vovô G.": "vovo_geraldo.jpg", "Vovô M.": "vovo_mario.jpg",
+    "Padrinho": "tio_padrinho.jpg", "Vovó N.": "vovo_neusa.jpg"
+}
 
-st.write("<h1 style='text-align:center; color:white; text-shadow:2px 2px 10px #000;'>✨ KAMILLY WORLD ✨</h1>", unsafe_allow_html=True)
+# --- ESTADOS DO JOGO ---
+if 'xp' not in st.session_state: st.session_state.xp = 0
+if 'level' not in st.session_state: st.session_state.level = 1
+if 'colecao' not in st.session_state: st.session_state.colecao = []
+if 'tabuleiro' not in st.session_state: 
+    st.session_state.tabuleiro = random.sample(list(parentes.keys()) * 3, 12)
 
-# BARRINHA DE SELEÇÃO
-st.markdown('<div class="slot-bar">', unsafe_allow_html=True)
-cols_slot = st.columns(8)
-for i in range(8):
-    with cols_slot[i]:
-        if i < len(st.session_state.selecionados):
-            nome = st.session_state.selecionados[i]
-            img = fotos_familia.get(nome)
-            if os.path.exists(img): st.image(img, width=80)
-            else: st.write(nome)
-st.markdown('</div>', unsafe_allow_html=True)
+# --- UI INTERFACE ---
+st.markdown(f"<div class='level-bar'>🌍 CAPÍTULO {st.session_state.level}: BRASIL - XP: {st.session_state.xp}</div>", unsafe_allow_html=True)
 
-# TABULEIRO
-cols = st.columns(6) # 6 colunas para caber tudo bonitinho
+# BARRA DE MATCH (IGUAL TILE EXPLORER)
+st.markdown("### 📥 ESPAÇO DE COMBINAÇÃO")
+slots = st.columns(7)
+for i in range(7):
+    with slots[i]:
+        if i < len(st.session_state.colecao):
+            p = st.session_state.colecao[i]
+            if os.path.exists(parentes[p]): st.image(parentes[p], width=70)
+            else: st.write(f"⭐\n{p}")
+
+# TABULEIRO DE TILES
+st.divider()
+rows = [st.columns(6) for _ in range(4)]
 for idx, peca in enumerate(st.session_state.tabuleiro):
     if peca != "vazio":
-        with cols[idx % 6]:
-            img_peca = fotos_familia.get(peca)
-            if os.path.exists(img_peca): st.image(img_peca, width=90)
-            
-            if st.button("PEGAR", key=f"tile_{idx}"):
-                st.session_state.selecionados.append(peca)
+        with rows[idx // 6][idx % 6]:
+            img = parentes.get(peca)
+            if os.path.exists(img): st.image(img, use_column_width=True)
+            if st.button("COLETAR", key=f"t_{idx}"):
+                st.session_state.colecao.append(peca)
                 st.session_state.tabuleiro[idx] = "vazio"
                 
-                # Lógica Match 3
-                for p in set(st.session_state.selecionados):
-                    if st.session_state.selecionados.count(p) >= 3:
-                        st.session_state.selecionados = [x for x in st.session_state.selecionados if x != p]
+                # LÓGICA DE MATCH 3 (TRIPLE MATCH)
+                for p in set(st.session_state.colecao):
+                    if st.session_state.colecao.count(p) >= 3:
+                        st.session_state.colecao = [x for x in st.session_state.colecao if x != p]
+                        st.session_state.xp += 100
                         st.balloons()
+                        if st.session_state.xp % 500 == 0:
+                            st.session_state.level += 1
+                            st.toast("🌎 NOVO PAÍS DESBLOQUEADO!", icon="✈️")
                 st.rerun()
 
-if st.sidebar.button("RESETAR JOGO"):
-    st.session_state.selecionados = []
-    st.session_state.tabuleiro = list(fotos_familia.keys()) * 2
-    random.shuffle(st.session_state.tabuleiro)
-    st.rerun()
+# --- FOOTER ---
+with st.sidebar:
+    st.title("⚙️ Debug Console")
+    if st.button("Próximo País ✈️"):
+        st.session_state.level += 1
+        st.rerun()
+    st.write("Engine: Python/Streamlit High-Performance")
