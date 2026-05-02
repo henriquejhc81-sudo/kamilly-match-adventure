@@ -2,64 +2,110 @@ import streamlit as st
 import random
 
 # --- CONFIGURAÇÃO DE ELITE ---
-st.set_page_config(page_title="KAMILLY WORLD", page_icon="👑", layout="wide")
+st.set_page_config(page_title="KAMILLY WORLD PREMIUM", layout="wide")
 
-# --- BANCO DE DADOS DA FAMÍLIA ---
-parentes = [
-    "Papai Rick 🧔", "Kamilly 👑", "Kauan 🤙", "Mamãe Michele 💙", 
-    "Tio MK 🍻", "Tio Michel 🤵", "Padrinho 🤟", "Vovó Diva 🌸",
-    "Tia Maria 👓", "Tia Valéria 💖", "Tia Kátia 🌻", "Vovô Geraldo 🤠",
-    "Vovô Mário 👨🏻‍🦱", "Vovó Neusa 🌸"
-]
-
-# --- CONTROLE DE FASES ---
-if 'fase' not in st.session_state:
-    st.session_state.fase = 1
-if 'tabuleiro' not in st.session_state:
-    st.session_state.tabuleiro = random.sample(parentes * 2, 12) # Começa fácil
-
-# --- ESTILIZAÇÃO POR FASE ---
-if st.session_state.fase == 1:
-    bg_color, title_color, tema = "#87CEEB", "#FF4500", "🏝️ FASE 1: AVENTURA NO HAVAÍ (STITCH)"
-    music_url = "https://soundhelix.com" # Exemplo: Havaí
-elif st.session_state.fase == 2:
-    bg_color, title_color, tema = "#0B0E14", "#FF0000", "🏮 FASE 2: MUNDO INVERTIDO (STRANGER THINGS)"
-    music_url = "https://soundhelix.com" # Exemplo: Mistério
-else:
-    bg_color, title_color, tema = "#E0FFE0", "#228B22", "🐻 FASE 3: FLORESTA DA MARSHA"
-    music_url = "https://soundhelix.com"
-
-st.markdown(f"""
+# --- DESIGN ESTILO TILE EXPLORER (CSS) ---
+st.markdown("""
     <style>
-    .main {{ background-color: {bg_color}; transition: 2s; }}
-    h1 {{ color: {title_color}; text-align: center; font-family: 'Courier New'; text-shadow: 2px 2px #000; }}
-    .stButton>button {{ height: 100px; width: 100%; border-radius: 10px; font-size: 30px; }}
+    .main { 
+        background: linear-gradient(180deg, #6a11cb 0%, #2575fc 100%);
+    }
+    /* BARRINHA DE COLEÇÃO NO TOPO */
+    .slot-bar {
+        background: rgba(255, 255, 255, 0.15);
+        border: 3px solid rgba(255, 255, 255, 0.4);
+        border-radius: 20px;
+        padding: 15px;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        backdrop-filter: blur(15px);
+        margin-bottom: 30px;
+        min-height: 100px;
+    }
+    /* AS PEÇAS (TILES) */
+    .stButton>button {
+        background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+        border: 2px solid #ffffff;
+        border-radius: 12px;
+        height: 85px !important;
+        width: 85px !important;
+        font-size: 35px;
+        box-shadow: 0 6px 0 #b0b0b0, 0 10px 20px rgba(0,0,0,0.3);
+        transition: 0.1s;
+        margin: 5px;
+    }
+    .stButton>button:hover {
+        transform: translateY(-3px);
+        filter: brightness(1.1);
+    }
+    .stButton>button:active {
+        transform: translateY(3px);
+        box-shadow: 0 2px 0 #b0b0b0;
+    }
     </style>
     """, unsafe_allow_html=True)
 
+# --- LÓGICA DO JOGO ---
+if 'selecionados' not in st.session_state: 
+    st.session_state.selecionados = []
+if 'tabuleiro' not in st.session_state:
+    # Usando Emojis como "dublês" das fotos por enquanto
+    itens = ["👑", "🧔", "💙", "🤙", "🍻", "🤵", "🌸", "🤠"] * 3
+    random.shuffle(itens)
+    st.session_state.tabuleiro = itens
+
 # --- INTERFACE ---
-st.title(f"👑 KAMILLY WORLD: {tema}")
-st.audio(music_url, format="audio/mp3", autoplay=True)
+st.write("<h1 style='text-align:center; color:white; font-family:Arial; text-shadow:2px 2px 10px #000;'>✨ KAMILLY ADVENTURE ✨</h1>", unsafe_allow_html=True)
 
-# --- LÓGICA DO TABULEIRO ---
-cols = st.columns(6)
-for i, peca in enumerate(st.session_state.tabuleiro):
-    with cols[i % 6]:
-        if st.button("❓", key=f"tile_{i}"):
-            st.toast(f"Achou o {peca}!", icon="✨")
-            st.write(f"**{peca}**")
+# BARRINHA DE SELEÇÃO (TOP BAR)
+st.markdown('<div class="slot-bar">', unsafe_allow_html=True)
+cols_slot = st.columns(7)
+for i in range(7):
+    with cols_slot[i]:
+        if i < len(st.session_state.selecionados):
+            st.markdown(f"<h1 style='text-align:center; margin:0;'>{st.session_state.selecionados[i]}</h1>", unsafe_allow_html=True)
+        else:
+            st.write("")
+st.markdown('</div>', unsafe_allow_html=True)
 
-# --- SISTEMA DE PROGRESSÃO ---
-st.sidebar.title("🎮 Painel de Controle")
-st.sidebar.write(f"Fase Atual: {st.session_state.fase}")
+# TABULEIRO DE PEÇAS
+_, center, _ = st.columns()
+with center:
+    # Mostra as peças em fileiras de 6
+    for r in range(4):
+        cols = st.columns(6)
+        for c in range(6):
+            idx = r * 6 + c
+            if idx < len(st.session_state.tabuleiro):
+                peca = st.session_state.tabuleiro[idx]
+                if peca != "vazio":
+                    with cols[c]:
+                        if st.button(peca, key=f"tile_{idx}"):
+                            # Move para a barra e tira do tabuleiro
+                            st.session_state.selecionados.append(peca)
+                            st.session_state.tabuleiro[idx] = "vazio"
+                            
+                            # Lógica de Match 3 (Se juntar 3 iguais na barra, elas explodem!)
+                            for p in set(st.session_state.selecionados):
+                                if st.session_state.selecionados.count(p) >= 3:
+                                    st.session_state.selecionados = [x for x in st.session_state.selecionados if x != p]
+                                    st.balloons()
+                            st.rerun()
 
-if st.sidebar.button("PROXIMA FASE ➡️"):
-    st.session_state.fase += 1
-    if st.session_state.fase > 3: st.session_state.fase = 1
-    st.session_state.tabuleiro = random.sample(parentes * 2, 12 + (st.session_state.fase * 2))
-    st.rerun()
+# --- REGRAS DE FIM DE JOGO ---
+if len(st.session_state.selecionados) >= 7:
+    st.error("A barrinha encheu! Vamos tentar de novo?")
+    if st.button("🔄 RECOMEÇAR"):
+        st.session_state.selecionados = []
+        st.session_state.tabuleiro = ["👑", "🧔", "💙", "🤙", "🍻", "🤵", "🌸", "🤠"] * 3
+        random.shuffle(st.session_state.tabuleiro)
+        st.rerun()
 
-if st.sidebar.button("Resetar Jogo 🔄"):
-    st.session_state.fase = 1
-    st.session_state.tabuleiro = random.sample(parentes * 2, 12)
-    st.rerun()
+with st.sidebar:
+    st.title("🎮 Opções")
+    if st.button("Reset Total"):
+        st.session_state.selecionados = []
+        st.session_state.tabuleiro = ["👑", "🧔", "💙", "🤙", "🍻", "🤵", "🌸", "🤠"] * 3
+        random.shuffle(st.session_state.tabuleiro)
+        st.rerun()
