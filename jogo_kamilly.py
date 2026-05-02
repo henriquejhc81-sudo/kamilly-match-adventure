@@ -3,18 +3,21 @@ import random
 import os
 
 # --- CONFIGURAÇÃO ---
-st.set_page_config(page_title="KAMILLY WORLD FOTOS", layout="wide")
+st.set_page_config(page_title="KAMILLY WORLD", layout="wide")
 
-# --- MAPEAMENTO DE FOTOS ---
+# --- MAPEAMENTO OFICIAL DAS FOTOS QUE VOCÊ FEZ ---
 fotos_familia = {
     "Kamilly 👑": "kamilly.jpg",
     "Papai Rick 🧔": "papai.jpg",
     "Mamãe Michele 💙": "mamae.jpg",
     "Kauan 🤙": "kauan.jpg",
+    "Tio MK 🍻": "tio_mk.jpg",
+    "Tio Michel 🤵": "tio_michel.jpg",
+    "Padrinho 🤟": "tio_padrinho.jpg",
     "Vovó Diva 🌸": "vova_diva.jpg",
     "Vovô Geraldo 🤠": "vovo_geraldo.jpg",
     "Vovô Mário 👨🏻‍🦱": "vovo_mario.jpg",
-    "Tio MK 🍻": "tio_mk.jpg"
+    "Vovó Neusa 🌸": "vovo_neusa.jpg"
 }
 
 # --- DESIGN ESTILO TILE EXPLORER ---
@@ -23,21 +26,14 @@ st.markdown("""
     .main { background: linear-gradient(180deg, #6a11cb 0%, #2575fc 100%); }
     .slot-bar {
         background: rgba(255, 255, 255, 0.2);
-        border: 3px solid white;
-        border-radius: 20px;
-        padding: 15px;
-        display: flex;
-        justify-content: center;
-        min-height: 120px;
-        margin-bottom: 20px;
+        border: 3px solid white; border-radius: 20px;
+        padding: 15px; display: flex; justify-content: center;
+        min-height: 120px; margin-bottom: 20px; gap: 10px;
     }
     .stButton>button {
-        height: 100px !important;
-        width: 100px !important;
-        border-radius: 15px;
-        border: 3px solid white;
-        box-shadow: 0 6px 0 #bbb;
-        background-color: white;
+        height: 100px !important; width: 100px !important;
+        border-radius: 15px; border: 3px solid white;
+        background-color: white; box-shadow: 0 6px 0 #bbb;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -49,9 +45,9 @@ if 'tabuleiro' not in st.session_state:
     random.shuffle(itens)
     st.session_state.tabuleiro = itens
 
-st.title("✨ KAMILLY ADVENTURE: EDIÇÃO FAMÍLIA ✨")
+st.write("<h1 style='text-align:center; color:white; text-shadow:2px 2px 10px #000;'>✨ KAMILLY WORLD ✨</h1>", unsafe_allow_html=True)
 
-# BARRINHA DE SELEÇÃO (TOP BAR)
+# BARRINHA DE SELEÇÃO
 st.markdown('<div class="slot-bar">', unsafe_allow_html=True)
 cols_slot = st.columns(8)
 for i in range(8):
@@ -59,26 +55,23 @@ for i in range(8):
         if i < len(st.session_state.selecionados):
             nome = st.session_state.selecionados[i]
             img = fotos_familia.get(nome)
-            if os.path.exists(img):
-                st.image(img, width=80)
-            else:
-                st.write(nome)
+            if os.path.exists(img): st.image(img, width=80)
+            else: st.write(nome)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# TABULEIRO - CORRIGIDO
-cols = st.columns(4) # Definimos 4 colunas fixas aqui
+# TABULEIRO
+cols = st.columns(6) # 6 colunas para caber tudo bonitinho
 for idx, peca in enumerate(st.session_state.tabuleiro):
     if peca != "vazio":
-        with cols[idx % 4]:
+        with cols[idx % 6]:
             img_peca = fotos_familia.get(peca)
-            if os.path.exists(img_peca):
-                st.image(img_peca, width=90)
+            if os.path.exists(img_peca): st.image(img_peca, width=90)
             
             if st.button("PEGAR", key=f"tile_{idx}"):
                 st.session_state.selecionados.append(peca)
                 st.session_state.tabuleiro[idx] = "vazio"
                 
-                # Match 3
+                # Lógica Match 3
                 for p in set(st.session_state.selecionados):
                     if st.session_state.selecionados.count(p) >= 3:
                         st.session_state.selecionados = [x for x in st.session_state.selecionados if x != p]
