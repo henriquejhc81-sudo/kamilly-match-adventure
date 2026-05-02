@@ -17,12 +17,12 @@ st.markdown("""
     .stButton>button {
         background: white !important; color: #FF1493 !important;
         border-radius: 20px !important; border: 3px solid #FF1493 !important;
-        font-weight: bold !important; height: 60px !important;
+        font-weight: bold !important; height: 60px !important; width: 100%;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. DATABASE (FAMÍLIA + EMOJIS DE SEGURANÇA) ---
+# --- 3. DATABASE ---
 familia = {
     "Papai Rick 🧔": "papai.jpg", "Kamilly 👑": "kamilly.jpg", 
     "Mamãe Michele 💙": "mamae.jpg", "Kauan 🤙": "kauan.jpg",
@@ -37,12 +37,12 @@ if 'colecao' not in st.session_state: st.session_state.colecao = []
 if 'tabuleiro' not in st.session_state:
     st.session_state.tabuleiro = random.sample(list(familia.keys()) * 3, 24)
 
-# --- 5. PLAYER DE MÚSICA (NOVO MODELO) ---
-# Usei um link de música clássica de teste que quase nunca falha
-st.audio("https://soundhelix.com", format="audio/mp3")
+# --- 5. MÚSICA ---
+st.write("🎵 Clique no Play para ouvir a música da Kamilly!")
+st.audio("https://soundhelix.com")
 
 # --- 6. INTERFACE ---
-st.markdown(f"<div class='level-bar'>🌍 NÍVEL {st.session_state.level} - ENCONTRE OS TRIOS!</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='level-bar'>🌍 NÍVEL {st.session_state.level} - VAMOS BRINCAR!</div>", unsafe_allow_html=True)
 
 # BARRINHA DE SELEÇÃO
 slots = st.columns(8)
@@ -50,22 +50,25 @@ for i in range(8):
     with slots[i]:
         if i < len(st.session_state.colecao):
             p = st.session_state.colecao[i]
-            foto = familia.get(p)
-            if os.path.exists(foto): st.image(foto, width=70)
-            else: st.markdown(f"<h1 style='text-align:center;'>{p[-1]}</h1>", unsafe_allow_html=True)
+            foto = familia.get(p, "")
+            if foto and os.path.exists(foto): 
+                st.image(foto, width=70)
+            else: 
+                st.markdown(f"<h2 style='text-align:center;'>{p[-1]}</h2>", unsafe_allow_html=True)
 
 st.divider()
 
-# TABULEIRO
+# TABULEIRO - COM TRAVA ANTI-ERRO
 cols = st.columns(6)
 for idx, peca in enumerate(st.session_state.tabuleiro):
     if peca != "vazio":
         with cols[idx % 6]:
-            foto_peca = familia.get(peca)
-            # Se a foto existir, mostra. Se não, mostra o Emoji grande
-            if os.path.exists(foto_peca): 
+            foto_peca = familia.get(peca, "")
+            # TRAVA DE SEGURANÇA: Só tenta abrir se a foto existir de verdade
+            if foto_peca and os.path.exists(foto_peca): 
                 st.image(foto_peca, use_column_width=True)
             else:
+                # Se não tem foto, mostra o emoji final do nome (ex: 👑)
                 st.markdown(f"<h1 style='text-align:center; font-size: 50px;'>{peca[-1]}</h1>", unsafe_allow_html=True)
             
             if st.button("PEGAR", key=f"btn_{idx}"):
