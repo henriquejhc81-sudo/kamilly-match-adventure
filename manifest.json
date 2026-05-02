@@ -1,0 +1,15 @@
+{
+  "name": "Kamilly World",
+  "short_name": "Kamilly",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFEDF6",
+  "theme_color": "#FF1493",
+  "icons": [
+    {
+      "src": "kamilly.jpg",
+      "sizes": "192x192",
+      "type": "image/jpg"
+    }
+  ]
+}
