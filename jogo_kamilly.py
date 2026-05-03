@@ -3,7 +3,7 @@ import random
 import os
 import time
 
-# --- 1. DESIGN ARCADE (TRAVA 3X3) ---
+# --- 1. CONFIGURAÇÃO ---
 st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🎰")
 
 st.markdown("""
@@ -22,8 +22,7 @@ st.markdown("""
         background: radial-gradient(circle, #ffd700, #b8860b) !important;
         color: black !important; border-radius: 50px !important;
         font-weight: bold !important; height: 60px !important; width: 100% !important;
-        font-size: 22px !important; box-shadow: 0 8px 15px rgba(0,0,0,0.5);
-        margin-top: 15px !important;
+        font-size: 22px !important; margin-top: 15px !important;
     }
     .moedas { color: #00ff00; font-size: 35px; font-weight: bold; text-align: center; }
     h1 { color: #ffd700; text-align: center; font-size: 24px; text-shadow: 0 0 10px #ffd700; }
@@ -35,7 +34,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. DATABASE (NOMES E EMOJIS DE SEGURANÇA) ---
+# --- 2. BANCO DE DADOS (FOTO E EMOJI) ---
 familia = {
     "Kamilly": ["kamilly.jpg", "👑"], "Papai Rick": ["papai.jpg", "🧔"], 
     "Mamãe": ["mamae.jpg", "👩‍🦰"], "Kauan": ["kauan.jpg", "🤙"], 
@@ -49,7 +48,7 @@ familia = {
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["Kamilly"] * 9
 
-# --- 4. PLAYER DE SOM (MODO SEGURO) ---
+# --- 4. PLAYER DE SOM ---
 st.components.v1.html("""
     <audio id="musica" loop><source src="https://soundhelix.com" type="audio/mp3"></audio>
     <script>
@@ -69,17 +68,16 @@ for r in range(3):
     for c in range(3):
         idx = r * 3 + c
         nome = st.session_state.grade[idx]
-        info = familia.get(nome, ["", "❓"])
-        foto, emoji = info, info[1]
+        foto_info = familia.get(nome)
         
-        # Tenta carregar a foto (minúsculo ou maiúsculo)
-        if os.path.exists(foto):
-            cols[c].image(foto, use_column_width=True)
-        elif os.path.exists(foto.upper()):
-            cols[c].image(foto.upper(), use_column_width=True)
+        foto_nome = foto_info[0]
+        emoji_reserva = foto_info[1]
+        
+        if os.path.exists(foto_nome):
+            cols[c].image(foto_nome, use_column_width=True)
         else:
-            # Se não achar a foto, mostra o emoji e o nome
-            cols[c].markdown(f"<div style='height:95px; background:#222; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid gold;'><span style='font-size:30px;'>{emoji}</span><span style='font-size:10px; color:white;'>{nome}</span></div>", unsafe_allow_html=True)
+            # Se a foto não existir, mostra o emoji bonito
+            cols[c].markdown(f"<div style='height:95px; background:#222; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid gold;'><span style='font-size:30px;'>{emoji_reserva}</span><span style='font-size:10px;'>{nome}</span></div>", unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # --- 6. BOTÃO DE GIRO ---
@@ -87,6 +85,7 @@ st.write("")
 if st.button("🔥 GIRAR E GANHAR ($50) 🔥"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
+        # 35% de chance de ganhar
         if random.random() < 0.35:
             vencedor = random.choice(list(familia.keys()))
             st.session_state.grade = [vencedor] * 9
