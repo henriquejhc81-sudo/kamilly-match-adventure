@@ -1,4 +1,25 @@
-# --- 4. ESTILIZAÇÃO CSS (AJUSTE FINO QUADRADO) ---
+import streamlit as st
+import random
+import os
+
+# --- 1. CONFIGURAÇÃO DA PÁGINA ---
+st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🎰")
+
+# --- 2. BANCO DE DADOS ---
+familia = {
+    "Kamilly": ["kamilly.jpg", "👑"], "Papai Rick": ["papai.jpg", "🧔"], 
+    "Mamãe": ["mamae.jpg", "👩‍🦰"], "Kauan": ["kauan.jpg", "🤙"], 
+    "Vovô G": ["vovo_geraldo.jpg", "🤠"], "Vovô M": ["vovo_mario.jpg", "👨‍🦳"], 
+    "Tio MK": ["tio_mk.jpg", "🍻"], "Vovó N": ["vovo_neusa.jpg", "🌸"], 
+    "Padrinho": ["tio_padrinho.jpg", "🤟"], "Tio Michel": ["tio_michel.jpg", "👨‍💻"], 
+    "Vovó Diva": ["vova_diva.jpg", "💎"]
+}
+
+# --- 3. ESTADOS DO JOGO ---
+if 'moedas' not in st.session_state: st.session_state.moedas = 1000
+if 'grade' not in st.session_state: st.session_state.grade = ["Kamilly"] * 9
+
+# --- 4. ESTILIZAÇÃO CSS (FOCO EM MOBILE) ---
 st.markdown("""
     <style>
     .main { background: #000b1e; color: white; }
@@ -7,7 +28,6 @@ st.markdown("""
         background: rgba(0, 0, 0, 0.9); padding: 5px;
         box-shadow: 0 0 15px #ffd700; max-width: 320px; margin: auto;
     }
-    /* FORÇA QUADRADO LADO A LADO */
     div[data-testid="column"] {
         width: 32% !important; flex: 1 1 32% !important; min-width: 32% !important;
     }
@@ -32,10 +52,20 @@ st.markdown("""
     }
     .moedas { color: #00ff00; font-size: 30px; font-weight: bold; text-align: center; }
     h1 { color: #ffd700; text-align: center; font-size: 20px; }
+    [data-testid="stSidebar"] { background-color: #000b1e; border-right: 2px solid gold; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 6. LÓGICA DO JACKPOT (COM BOX QUADRADA) ---
+# --- 5. MENU LATERAL ---
+with st.sidebar:
+    st.title("🕹️ ARCADE")
+    opcao = st.radio("JOGOS:", ["🎰 Jackpot", "🧠 Quiz", "🐍 Snake"])
+    st.markdown(f"<p class='moedas'>💰 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
+    if st.button("🔄 RESET"):
+        st.session_state.moedas = 1000
+        st.rerun()
+
+# --- 6. JOGO PRINCIPAL ---
 if opcao == "🎰 Jackpot":
     st.markdown("<h1>🎰 FESTA DO JACKPOT 🎰</h1>", unsafe_allow_html=True)
     st.markdown('<div class="slot-frame">', unsafe_allow_html=True)
@@ -47,11 +77,9 @@ if opcao == "🎰 Jackpot":
             dados = familia.get(nome_p, ["", "❓"])
             foto, emoji = dados, dados[1]
 
-            try:
-                # Se a foto existir no GitHub, ela carrega aqui
+            if foto != "" and os.path.exists(foto):
                 cols[c].image(foto, use_container_width=True)
-            except:
-                # Se não existir, desenha o quadrado com o emoji
+            else:
                 cols[c].markdown(f"""
                     <div class="slot-box">
                         <span style='font-size:25px;'>{emoji}</span>
@@ -59,3 +87,17 @@ if opcao == "🎰 Jackpot":
                     </div>
                 """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
+
+    if st.button("🔥 GIRAR ($50) 🔥"):
+        if st.session_state.moedas >= 50:
+            st.session_state.moedas -= 50
+            if random.random() < 0.35:
+                venc = random.choice(list(familia.keys()))
+                st.session_state.grade = [venc] * 9
+                st.session_state.moedas += 3000
+                st.balloons()
+            else:
+                st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
+            st.rerun()
+else:
+    st.info("Selecione 'Jackpot' no menu para jogar!")
