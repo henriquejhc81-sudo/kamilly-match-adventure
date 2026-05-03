@@ -4,40 +4,36 @@ import os
 import time
 
 # --- 1. CONFIGURAÇÃO ARCADE ---
-st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🕹️")
+st.set_page_config(page_title="KAMILLY ARCADE PRO", layout="wide", page_icon="🕹️")
 
 st.markdown("""
     <style>
-    .main { background: linear-gradient(135deg, #001f3f, #0074D9); }
-    .arcade-frame {
-        border: 5px solid #ffd700; border-radius: 20px;
-        background: rgba(0, 0, 0, 0.7); padding: 15px;
-        box-shadow: 0 0 30px #ffd700; display: inline-block;
+    .main { background: #0e1117; }
+    .arcade-card {
+        border: 4px solid #ffd700; border-radius: 20px;
+        background: rgba(255, 255, 255, 0.05); padding: 15px;
+        text-align: center; box-shadow: 0 0 20px #ffd700;
     }
-    img {
-        border-radius: 10px; border: 2px solid gold;
-        object-fit: cover; height: 100px !important; width: 100px !important;
-    }
+    img { border-radius: 15px; border: 2px solid white; object-fit: cover; }
     .stButton>button {
-        background: radial-gradient(circle, #ffd700, #b8860b) !important;
-        color: black !important; border-radius: 50% !important;
-        width: 100px !important; height: 100px !important;
-        font-size: 40px !important; box-shadow: 0 8px 15px rgba(0,0,0,0.5) !important;
+        background: linear-gradient(180deg, #ffd700, #b8860b) !important;
+        color: black !important; border-radius: 50px !important;
+        font-weight: bold !important; height: 60px !important; width: 100% !important;
     }
-    h1 { color: #ffd700; text-align: center; text-shadow: 2px 2px #000; }
+    .moedas { color: #00ff00; font-size: 30px; font-weight: bold; text-align: center; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. DATABASE FAMÍLIA ---
-parentes = {
-    "K": "kamilly.jpg", "P": "papai.jpg", "M": "mamae.jpg",
-    "Kn": "kauan.jpg", "VG": "vovo_geraldo.jpg", "VM": "vovo_mario.jpg",
-    "TM": "tio_mk.jpg", "VN": "vovo_neusa.jpg", "PD": "tio_padrinho.jpg"
+# --- 2. DATABASE FAMÍLIA (NOMES EXATOS) ---
+familia = {
+    "Papai Rick": "papai.jpg", "Kamilly": "kamilly.jpg", "Mamãe": "mamae.jpg",
+    "Kauan": "kauan.jpg", "Vovô G.": "vovo_geraldo.jpg", "Vovô M.": "vovo_mario.jpg",
+    "Tio MK": "tio_mk.jpg", "Vovó N.": "vovo_neusa.jpg", "Padrinho": "tio_padrinho.jpg"
 }
 
-# --- 3. ESTADOS ---
+# --- 3. ESTADOS DO SISTEMA ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-if 'jogo' not in st.session_state: st.session_state.jogo = "🎰 ROLETA"
+if 'cartucho' not in st.session_state: st.session_state.cartucho = "🎰 ROLETA"
 
 # --- 4. PLAYER DE SOM AUTOMÁTICO ---
 st.components.v1.html("""
@@ -47,42 +43,48 @@ st.components.v1.html("""
 
 # --- 5. INTERFACE DO EMULADOR ---
 with st.sidebar:
-    st.title("🕹️ MENU ARCADE")
-    st.session_state.jogo = st.radio("ESCOLHA O JOGO:", ["🎰 ROLETA", "🧩 MEMÓRIA", "🐯 TIGRINHO"])
+    st.image("https://icons8.com")
+    st.title("🎮 ARCADE MENU")
+    st.session_state.cartucho = st.radio("SELECIONE O CARTUCHO:", ["🎰 ROLETA", "🧩 MEMÓRIA", "🐯 TIGRINHO"])
     st.divider()
-    st.write(f"🪙 MOEDAS: {st.session_state.moedas}")
-    if st.button("🔄 RESET"): st.session_state.moedas = 1000; st.rerun()
+    st.markdown(f"<p class='moedas'>🪙 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
+    if st.button("🔄 REBOOT SISTEMA"): st.session_state.moedas = 1000; st.rerun()
 
-st.markdown(f"<h1>{st.session_state.jogo}</h1>", unsafe_allow_html=True)
-
-# --- LÓGICA DO JOGO DE ROLETA ---
-if st.session_state.jogo == "🎰 ROLETA":
-    if 'grade' not in st.session_state: st.session_state.grade = [random.choice(list(parentes.keys())) for _ in range(9)]
+# --- CARTUCHO 1: ROLETA DA SORTE ---
+if st.session_state.cartucho == "🎰 ROLETA":
+    st.title("🎰 ROLETA DA FAMÍLIA")
+    if 'grade' not in st.session_state: st.session_state.grade = random.sample(list(familia.keys()) * 2, 9)
     
-    st.markdown('<center><div class="arcade-frame">', unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
+    # Grid de Fotos Blindado
+    cols = st.columns(3)
     for i in range(9):
-        with [c1, c2, c3][i % 3]:
-            img = parentes.get(st.session_state.grade[i])
-            if os.path.exists(img): st.image(img)
-    st.markdown('</div></center>', unsafe_allow_html=True)
+        with cols[i % 3]:
+            nome = st.session_state.grade[i]
+            foto = familia.get(nome)
+            # TRAVA ANTI-ERRO: Só mostra se a foto existir
+            if foto and os.path.exists(foto): st.image(foto, use_column_width=True)
+            else: st.info(f"📸 {nome}")
 
-    if st.button("🎰"):
+    if st.button("🔥 GIRAR ROLETA ($50)"):
         if st.session_state.moedas >= 50:
             st.session_state.moedas -= 50
-            st.session_state.grade = [random.choice(list(parentes.keys())) for _ in range(9)]
-            if len(set(st.session_state.grade[3:6])) == 1:
+            st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
+            # Lógica de Vitória (Linha do meio)
+            if st.session_state.grade[3] == st.session_state.grade[4] == st.session_state.grade:
                 st.session_state.moedas += 1000
                 st.balloons()
             st.rerun()
 
-# --- LÓGICA DO JOGO DE MEMÓRIA ---
-elif st.session_state.jogo == "🧩 MEMÓRIA":
-    st.write("### Combine os pares da família!")
-    st.info("Em breve: Versão 2.0 do Match!")
+# --- CARTUCHO 2: JOGO DE MEMÓRIA ---
+elif st.session_state.cartucho == "🧩 MEMÓRIA":
+    st.title("🧩 MEMÓRIA EM FAMÍLIA")
+    st.write("### Combine os pares para ganhar moedas!")
+    st.warning("O cartucho está sendo carregado... Jogue a Roleta enquanto isso!")
 
-# --- LÓGICA DO TIGRINHO ---
-elif st.session_state.jogo == "🐯 TIGRINHO":
-    st.write("### Sorte do Tigrão da Família!")
-    st.warning("Gaste suas moedas aqui!")
-
+# --- CARTUCHO 3: TIGRINHO DA SORTE ---
+elif st.session_state.cartucho == "🐯 TIGRINHO":
+    st.title("🐯 TIGRINHO FORTUNE")
+    st.markdown("### <center>💰 TENTE A SORTE GRANDE! 💰</center>", unsafe_allow_html=True)
+    st.image("https://icons8.com")
+    if st.button("🍀 APOSTAR TUDO"):
+        st.toast("O Tigrão está dormindo... Volte mais tarde!")
