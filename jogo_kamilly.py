@@ -1,47 +1,33 @@
 import streamlit as st
 import random
 import os
-import time
 
-# --- 1. DESIGN TRAVADO PARA CELULAR ---
+# --- 1. DESIGN INFALÍVEL (HTML TABLE) ---
 st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🎰")
 
-venceu = st.session_state.get('venceu', False)
-border_color = "#00ff00" if venceu else "#ffd700"
-
-st.markdown(f"""
+st.markdown("""
     <style>
-    .main {{ background: #000b1e; }}
-    /* CONSOLE COMPACTO PARA CABER NO CELULAR */
-    .console-box {{
-        border: 6px solid {border_color}; border-radius: 20px;
-        background: rgba(0, 0, 0, 0.9); padding: 5px;
-        box-shadow: 0 0 20px {border_color}; text-align: center;
-        width: 320px; margin: auto; /* Largura fixa para não espalhar */
-    }}
-    /* FOTOS BEM JUNTINHAS E PEQUENAS */
-    img {{ 
-        border-radius: 8px; border: 2px solid gold; 
-        height: 90px !important; width: 90px !important; 
-        object-fit: cover; margin: 0px !important;
-    }}
-    .stButton>button {{
+    .main { background: #000b1e; color: white; }
+    /* Estilo da Tabela que trava o 3x3 */
+    .slot-table {
+        margin-left: auto; margin-right: auto;
+        border: 5px solid #ffd700; border-radius: 20px;
+        background: rgba(0, 0, 0, 0.8); padding: 5px;
+        box-shadow: 0 0 30px #ffd700;
+    }
+    .slot-table img {
+        border-radius: 10px; border: 2px solid gold;
+        width: 85px !important; height: 85px !important;
+        object-fit: cover; display: block;
+    }
+    .stButton>button {
         background: radial-gradient(circle, #ffd700, #b8860b) !important;
         color: black !important; border-radius: 50px !important;
-        font-weight: bold !important; height: 60px !important; width: 100% !important;
-        font-size: 20px !important; margin-top: 10px !important;
-    }}
-    .moedas {{ color: #00ff00; font-size: 30px; font-weight: bold; text-align: center; margin: 5px 0; }}
-    h1 {{ color: #ffd700; text-align: center; font-size: 22px; margin-bottom: 5px; }}
-    
-    /* FORÇA 3 COLUNAS NO CELULAR */
-    [data-testid="column"] {{ 
-        width: calc(33.33% - 4px) !important; 
-        flex: 1 1 calc(33.33% - 4px) !important; 
-        min-width: calc(33.33% - 4px) !important;
-        padding: 2px !important;
-    }}
-    div[data-testid="stHorizontalBlock"] {{ gap: 0px !important; display: flex !important; flex-direction: row !important; }}
+        font-weight: bold !important; height: 65px !important; width: 100% !important;
+        font-size: 22px !important; margin-top: 15px !important;
+    }
+    .moedas { color: #00ff00; font-size: 35px; font-weight: bold; text-align: center; }
+    h1 { color: #ffd700; text-align: center; font-size: 24px; text-shadow: 0 0 10px #ffd700; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -56,17 +42,19 @@ familia = {
 # --- 3. ESTADOS ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["Kamilly"] * 9
-if 'venceu' not in st.session_state: st.session_state.venceu = False
 
-# --- 4. PLAYER DE SOM ---
-st.components.v1.html(f"""
-    <audio id="arcade-music" loop autoplay><source src="https://soundhelix.com" type="audio/mp3"></audio>
-    <audio id="win-sound"><source src="https://myinstants.com" type="audio/mp3"></audio>
+# --- 4. PLAYER DE SOM (BLINDADO PARA CELULAR) ---
+# Adicionei um botão invisível que cobre a tela para liberar o som no primeiro toque
+st.components.v1.html("""
+    <audio id="musica" loop><source src="https://soundhelix.com" type="audio/mp3"></audio>
+    <audio id="vitoria"><source src="https://myinstants.com" type="audio/mp3"></audio>
     <script>
-        const music = document.getElementById('arcade-music');
-        const win = document.getElementById('win-sound');
-        document.body.addEventListener('click', () => {{ music.play(); }}, {{once: true}});
-        if ({str(venceu).lower()}) {{ win.volume = 1.0; win.play(); }}
+        window.parent.document.addEventListener('touchstart', function() {
+            document.getElementById('musica').play();
+        }, {once: true});
+        window.parent.document.addEventListener('mousedown', function() {
+            document.getElementById('musica').play();
+        }, {once: true});
     </script>
 """, height=0)
 
@@ -74,36 +62,41 @@ st.components.v1.html(f"""
 st.markdown("<h1>🎰 FESTA DO JACKPOT 🎰</h1>", unsafe_allow_html=True)
 st.markdown(f"<p class='moedas'>💰 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
 
-st.markdown('<div class="console-box">', unsafe_allow_html=True)
-def render_celular(lista):
+# CONSTRUÇÃO DA GRADE USANDO HTML PURO (O Streamlit não consegue quebrar isso!)
+def gerar_grade_html(lista):
+    html = '<table class="slot-table">'
     for r in range(3):
-        cols = st.columns(3)
+        html += '<tr>'
         for c in range(3):
             idx = r * 3 + c
             nome = lista[idx]
             foto = familia.get(nome)
-            if nome == "Vovó Diva" and not os.path.exists("vova_diva.jpg"): foto = "vovo_diva.jpg"
-            if foto and os.path.exists(foto): cols[c].image(foto, use_column_width=True)
-            else: cols[c].write(nome)
-render_celular(st.session_state.grade)
-st.markdown('</div>', unsafe_allow_html=True)
+            # Tenta pegar a foto no GitHub (ajustado para vovo_diva)
+            path = f"https://githubusercontent.com{foto}"
+            html += f'<td><img src="{path}"></td>'
+        html += '</tr>'
+    html += '</table>'
+    return html
+
+st.markdown(gerar_grade_html(st.session_state.grade), unsafe_allow_html=True)
 
 # BOTÃO DE GIRO
-if st.button("🔥 GIRAR ($50) 🔥"):
+if st.button("🔥 GIRAR E GANHAR ($50)"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        st.session_state.venceu = False
-        if random.random() < 0.35: # Chance boa de ganhar!
+        
+        # Sorteio com 35% de chance de ganhar
+        if random.random() < 0.35:
             vencedor = random.choice(list(familia.keys()))
             st.session_state.grade = [vencedor] * 9
             st.session_state.moedas += 3000
-            st.session_state.venceu = True
             st.balloons()
+            st.snow()
         else:
             st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
+        
         st.rerun()
 
 if st.button("🔄 RECARREGAR"):
     st.session_state.moedas = 1000
-    st.session_state.venceu = False
     st.rerun()
