@@ -9,7 +9,6 @@ st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="�
 st.markdown("""
     <style>
     .main { background: #0a0e14; }
-    /* CONSOLE CENTRALIZADO E PEQUENO */
     .arcade-card {
         max-width: 360px; margin: auto; padding: 10px;
         border: 4px solid #ffd700; border-radius: 20px;
@@ -31,7 +30,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. DATABASE FAMÍLIA ---
+# --- 2. DATABASE ---
 familia = {
     "Papai": "papai.jpg", "Kamilly": "kamilly.jpg", "Mamãe": "mamae.jpg",
     "Kauan": "kauan.jpg", "Vovô G.": "vovo_geraldo.jpg", "Vovô M.": "vovo_mario.jpg",
@@ -42,7 +41,7 @@ familia = {
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = random.sample(list(familia.keys()) * 2, 9)
 
-# --- 4. PLAYER DE SOM (AUTOPLAY NO CLIQUE) ---
+# --- 4. PLAYER DE SOM AUTOMÁTICO ---
 st.components.v1.html("""
     <audio id="arcade-sound" loop autoplay><source src="https://soundhelix.com" type="audio/mp3"></audio>
     <script>document.body.addEventListener('click', function() { document.getElementById('arcade-sound').play(); }, {once: true});</script>
@@ -53,7 +52,6 @@ st.markdown("<h1>🕹️ KAMILLY LUCKY ARCADE</h1>", unsafe_allow_html=True)
 st.markdown(f"<p class='moedas'>💰 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
 
 st.markdown('<div class="arcade-card">', unsafe_allow_html=True)
-
 cols = st.columns(3)
 placeholders = [cols[i%3].empty() for i in range(9)]
 
@@ -74,7 +72,7 @@ if st.button("🔥 GIRAR ROLETA ($50)"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
         
-        # Animação de giro rápido
+        # Giro rápido
         for _ in range(8):
             temp = [random.choice(list(familia.keys())) for _ in range(9)]
             render(temp)
@@ -84,12 +82,12 @@ if st.button("🔥 GIRAR ROLETA ($50)"):
         st.session_state.grade = final
         render(final)
 
-        # LÓGICA DE PREMIAÇÃO (CORRIGIDA)
+        # LÓGICA DE PREMIAÇÃO (FIXADA)
         ganhou = False
-        # Linhas horizontais (0-1-2, 3-4-5, 6-7-8)
+        # Checa linhas: 0,1,2 | 3,4,5 | 6,7,8
         for i in:
             if final[i] == final[i+1] == final[i+2]: ganhou = True
-        # Colunas (0-3-6, 1-4-7, 2-5-8)
+        # Checa colunas: 0,3,6 | 1,4,7 | 2,5,8
         for i in:
             if final[i] == final[i+3] == final[i+6]: ganhou = True
         
