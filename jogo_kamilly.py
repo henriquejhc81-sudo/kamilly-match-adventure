@@ -2,13 +2,12 @@ import streamlit as st
 import random
 import os
 
-# --- 1. DESIGN INFALÍVEL (HTML TABLE) ---
+# --- 1. DESIGN INFALÍVEL ---
 st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🎰")
 
 st.markdown("""
     <style>
     .main { background: #000b1e; color: white; }
-    /* Estilo da Tabela que trava o 3x3 */
     .slot-table {
         margin-left: auto; margin-right: auto;
         border: 5px solid #ffd700; border-radius: 20px;
@@ -43,16 +42,15 @@ familia = {
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["Kamilly"] * 9
 
-# --- 4. PLAYER DE SOM (BLINDADO PARA CELULAR) ---
-# Adicionei um botão invisível que cobre a tela para liberar o som no primeiro toque
+# --- 4. PLAYER DE SOM (MODO COMPATIBILIDADE) ---
 st.components.v1.html("""
     <audio id="musica" loop><source src="https://soundhelix.com" type="audio/mp3"></audio>
-    <audio id="vitoria"><source src="https://myinstants.com" type="audio/mp3"></audio>
     <script>
+        // Tenta tocar em qualquer interação com a página (toque ou clique)
         window.parent.document.addEventListener('touchstart', function() {
             document.getElementById('musica').play();
         }, {once: true});
-        window.parent.document.addEventListener('mousedown', function() {
+        window.parent.document.addEventListener('click', function() {
             document.getElementById('musica').play();
         }, {once: true});
     </script>
@@ -62,25 +60,25 @@ st.components.v1.html("""
 st.markdown("<h1>🎰 FESTA DO JACKPOT 🎰</h1>", unsafe_allow_html=True)
 st.markdown(f"<p class='moedas'>💰 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
 
-# CONSTRUÇÃO DA GRADE USANDO HTML PURO (O Streamlit não consegue quebrar isso!)
-def gerar_grade_html(lista):
-    html = '<table class="slot-table">'
-    for r in range(3):
-        html += '<tr>'
-        for c in range(3):
-            idx = r * 3 + c
-            nome = lista[idx]
-            foto = familia.get(nome)
-            # Tenta pegar a foto no GitHub (ajustado para vovo_diva)
-            path = f"https://githubusercontent.com{foto}"
-            html += f'<td><img src="{path}"></td>'
-        html += '</tr>'
-    html += '</table>'
-    return html
+# CONSTRUÇÃO DA GRADE (Corrigido para carregar fotos locais)
+def renderizar_grade(lista):
+    cols = st.columns(3)
+    for i in range(9):
+        nome = lista[i]
+        foto = familia.get(nome)
+        with cols[i % 3]:
+            if os.path.exists(foto):
+                st.image(foto, use_column_width=True)
+            else:
+                st.write(f"📸 {nome}")
 
-st.markdown(gerar_grade_html(st.session_state.grade), unsafe_allow_html=True)
+# Colocamos o tabuleiro dentro de um container centralizado
+st.markdown('<div class="slot-table">', unsafe_allow_html=True)
+renderizar_grade(st.session_state.grade)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # BOTÃO DE GIRO
+st.write("")
 if st.button("🔥 GIRAR E GANHAR ($50)"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
@@ -91,7 +89,6 @@ if st.button("🔥 GIRAR E GANHAR ($50)"):
             st.session_state.grade = [vencedor] * 9
             st.session_state.moedas += 3000
             st.balloons()
-            st.snow()
         else:
             st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
         
