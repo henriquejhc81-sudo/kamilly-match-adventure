@@ -5,7 +5,7 @@ import os
 import base64
 
 # --- 1. CONFIGURAÇÃO ---
-st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🎰")
+st.set_page_config(page_title="KAMILLY", layout="centered", page_icon="🎰")
 
 # --- 2. BANCO DE DADOS (11 PERSONAGENS) ---
 familia = {
