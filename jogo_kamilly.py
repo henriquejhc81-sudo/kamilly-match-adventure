@@ -22,16 +22,19 @@ familia_config = {
     "vovo_neusa": ["vovo_neusa.jpg", "🌸"]
 }
 
-# --- 3. CACHE DE IMAGENS (ALTA VELOCIDADE - EVITA TRAVAMENTOS) ---
+# --- 3. CACHE DE IMAGENS (ALTA VELOCIDADE) ---
 @st.cache_data
 def carregar_assets_base64():
     assets_b64 = {}
     for nome, info in familia_config.items():
         caminho = info[0]
         if os.path.exists(caminho):
-            with open(caminho, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode()
-                assets_b64[nome] = f"data:image/jpeg;base64,{b64}"
+            try:
+                with open(caminho, "rb") as f:
+                    b64 = base64.b64encode(f.read()).decode()
+                    assets_b64[nome] = f"data:image/jpeg;base64,{b64}"
+            except:
+                assets_b64[nome] = None
         else:
             assets_b64[nome] = None
     return assets_b64
@@ -42,14 +45,17 @@ if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 if 'vitoria' not in st.session_state: st.session_state.vitoria = False
 
-# --- 4. CSS PROFISSIONAL (DESIGN NEON & ANIMAÇÕES) ---
+# --- 4. CSS PROFISSIONAL CORRIGIDO (SEM ERRO DE CHAVES) ---
+# Usei f-strings duplas {{ }} para evitar o erro de sintaxe do Python
+cor_borda = "#FF1493" if st.session_state.vitoria else "#0055ff"
+brilho_borda = "60px #FF1493" if st.session_state.vitoria else "30px #0055ff"
+
 st.markdown(f"""
     <style>
     .block-container {{ padding-top: 0rem !important; margin-top: -60px !important; }}
     .main {{ background-color: #050a1a; }}
-    header {{visibility: hidden;}}
+    header {{ visibility: hidden; }}
     
-    /* TÍTULO KAMILLY NEON */
     .kamilly-header {{ 
         color: #FF69B4; 
         text-align: center; 
@@ -58,12 +64,14 @@ st.markdown(f"""
         text-shadow: 0 0 20px #FF69B4, 0 0 40px #FF69B4, 2px 2px #fff;
         margin-bottom: 0px;
         animation: glow 1.5s infinite alternate;
-    }
-    @keyframes glow {{ from {{ opacity: 0.8; }} to {{ opacity: 1; text-shadow: 0 0 30px #FF69B4, 0 0 50px #FF1493, 2px 2px #fff; }} }}
+    }}
+    @keyframes glow {{ 
+        from {{ opacity: 0.8; }} 
+        to {{ opacity: 1; text-shadow: 0 0 30px #FF69B4, 0 0 50px #FF1493, 2px 2px #fff; }} 
+    }}
 
-    /* MOLDURA DA ROLETA (DINÂMICA) */
     .arcade-frame {{
-        border: 10px solid {"#FF1493" if st.session_state.vitoria else "#0055ff"};
+        border: 10px solid {cor_borda};
         border-radius: 30px;
         background: #000;
         padding: 0px;
@@ -71,7 +79,7 @@ st.markdown(f"""
         overflow: hidden;
         max-width: 320px;
         line-height: 0;
-        box-shadow: 0 0 {"60px #FF1493" if st.session_state.vitoria else "30px #0055ff"};
+        box-shadow: 0 0 {brilho_borda};
         transition: all 0.4s ease;
     }}
 
@@ -82,7 +90,6 @@ st.markdown(f"""
         width: 100%;
     }}
 
-    /* EFEITO DE MOVIMENTO REAL (BLUR E SLIDE) */
     .reel-spin img {{
         animation: slideVertical 0.06s infinite linear;
         filter: blur(2px) brightness(1.2);
@@ -94,7 +101,6 @@ st.markdown(f"""
         height: 160px;
         object-fit: cover;
         display: block;
-        transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }}
 
     .moedas-banner {{
@@ -106,7 +112,6 @@ st.markdown(f"""
         border: 2px solid white;
     }}
 
-    /* BOTÃO VAMOS BRINCAR INFANTIL CLEAN */
     .stButton>button {{
         background: linear-gradient(145deg, #FFB6C1, #FF69B4) !important;
         color: white !important;
@@ -120,24 +125,21 @@ st.markdown(f"""
         box-shadow: 0 10px 20px rgba(255, 105, 180, 0.5) !important;
         margin: 15px auto !important;
         display: block !important;
-        transition: 0.3s;
     }}
-    .stButton>button:active {{ transform: scale(0.95); }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. SOUND ENGINE (JS TRIGGERS) ---
+# --- 5. MOTOR DE SOM ---
 def sound_engine(tipo):
     urls = {
         'giro': 'https://soundjay.com',
         'vitoria': 'https://soundjay.com'
     }
-    if tipo in urls:
-        st.components.v1.html(f"""
-            <audio autoplay><source src="{urls[tipo]}" type="audio/mp3"></audio>
-        """, height=0)
+    st.components.v1.html(f"""
+        <audio autoplay><source src="{urls[tipo]}" type="audio/mp3"></audio>
+    """, height=0)
 
-# --- 6. INTERFACE & RENDERIZAÇÃO ---
+# --- 6. INTERFACE ---
 st.markdown("<p class='kamilly-header'>Kamilly</p>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
@@ -149,7 +151,7 @@ def mostrar_roleta(lista, girando=False):
     for nome in lista:
         b64 = assets_ready.get(nome)
         if b64:
-            style = "filter: brightness(1.3) contrast(1.1); scale: 1.05;" if st.session_state.vitoria else ""
+            style = "filter: brightness(1.3) contrast(1.1); transform: scale(1.05);" if st.session_state.vitoria else ""
             html += f'<img src="{b64}" style="{style}">'
         else:
             emoji = familia_config.get(nome, ["", "💎"])[1]
@@ -159,23 +161,20 @@ def mostrar_roleta(lista, girando=False):
 
 mostrar_roleta(st.session_state.grade)
 
-# --- 7. LÓGICA DE GIRO (REEL SPIN SYSTEM) ---
+# --- 7. LÓGICA DE GIRO ---
 if st.button("VAMOS BRINCAR"):
     st.session_state.vitoria = False
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
         sound_engine('giro')
         
-        # Animação de Giro Progressivo (Acelera e Desacelera)
-        frames = 18
+        frames = 15
         for i in range(frames):
             grade_temp = random.choices(list(familia_config.keys()), k=6)
             mostrar_roleta(grade_temp, girando=True)
-            # Simulação de inércia: fica mais lento no final
-            delay = 0.02 + (i/frames)**2 * 0.1
+            delay = 0.02 + (i/frames)**2 * 0.08
             time.sleep(delay)
         
-        # RNG - Resultado Final
         if random.random() < 0.35:
             venc = random.choice(list(familia_config.keys()))
             st.session_state.grade = [venc] * 6
@@ -184,9 +183,8 @@ if st.button("VAMOS BRINCAR"):
             mostrar_roleta(st.session_state.grade, girando=False)
             st.balloons()
             sound_engine('vitoria')
-            st.success(f"🏆 JACKPOT! +$2500")
         else:
-            st.session_state.grade = random.choices(list(familia.keys()), k=6)
+            st.session_state.grade = random.choices(list(familia_config.keys()), k=6)
             mostrar_roleta(st.session_state.grade, girando=False)
         
         st.rerun()
