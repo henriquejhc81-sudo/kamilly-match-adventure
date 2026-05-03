@@ -1,135 +1,69 @@
 import streamlit as st
 import random
-import time
 
-# --- CONFIGURAÇÃO DO APP ---
-st.set_page_config(page_title="MEU ARCADE ANDROID", layout="centered", page_icon="🎮")
+# Configuração para parecer um App de celular
+st.set_page_config(page_title="ARCADE PRO", layout="centered", page_icon="🕹️")
 
-# CSS para esconder menus do Streamlit e deixar com cara de App
+# CSS para esconder menus e melhorar os botões no Android
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
     .stButton>button {
-        width: 100%;
-        height: 60px;
-        font-size: 20px !important;
-        border-radius: 15px;
-    }
-    .game-card {
-        background: #1e1e1e;
-        padding: 20px;
-        border-radius: 15px;
-        border: 2px solid #00ff00;
-        text-align: center;
+        width: 100%; height: 60px; font-size: 20px !important;
+        border-radius: 12px; background: #2e2e2e; color: #00ff00;
+        border: 2px solid #00ff00; margin-bottom: 10px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- ESTADO GLOBAL ---
+# --- SISTEMA DE ESTADO ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 100
+if 'game_active' not in st.session_state: st.session_state.game_active = "Menu"
 
-# --- NAVEGAÇÃO ---
-menu = st.sidebar.selectbox("ESCOLHA O JOGO 🕹️", ["Início", "Slot Machine", "Cobra (Snake)", "Adivinhação"])
-
-# --- 1. TELA INICIAL ---
-if menu == "Início":
-    st.title("📱 ANDROID ARCADE")
-    st.markdown(f"### Suas Moedas: 💰 {st.session_state.moedas}")
-    st.write("---")
-    st.info("Escolha um jogo no menu lateral para começar!")
-    st.image("https://freepik.com")
-
-# --- 2. SLOT MACHINE (JACKPOT) ---
-elif menu == "Slot Machine":
-    st.title("🎰 MEGA SLOT")
-    itens = ["🍎", "💎", "7️⃣", "🍒", "🔔"]
-    
-    col1, col2, col3 = st.columns(3)
-    if 'slot_res' not in st.session_state: st.session_state.slot_res = ["❓", "❓", "❓"]
-    
-    col1.header(st.session_state.slot_res)
-    col2.header(st.session_state.slot_res)
-    col3.header(st.session_state.slot_res)
-
-    if st.button("GIRAR (5 Moedas)"):
-        if st.session_state.moedas >= 5:
-            st.session_state.moedas -= 5
-            res = [random.choice(itens) for _ in range(3)]
-            st.session_state.slot_res = res
-            if res[0] == res[1] == res:
-                st.success("JACKPOT! +100 Moedas")
-                st.session_state.moedas += 100
+# --- JOGO 1: SLOT MACHINE ---
+def slot_machine():
+    st.subheader("🎰 Lucky Slot")
+    icons = ["🍎", "💎", "🍒", "7️⃣"]
+    if st.button("GIRAR (Custo: 10 Moedas)"):
+        if st.session_state.moedas >= 10:
+            st.session_state.moedas -= 10
+            res = [random.choice(icons) for _ in range(3)]
+            st.header(f"{res} | {res} | {res}")
+            if res == res == res:
+                st.success("JACKPOT! +200 Moedas")
+                st.session_state.moedas += 200
                 st.balloons()
-            st.rerun()
         else:
-            st.error("Sem moedas!")
+            st.error("Moedas insuficientes!")
 
-# --- 3. SNAKE (VERSÃO BOTÕES) ---
-elif menu == "Cobra (Snake)":
-    st.title("🐍 SNAKE ARCADE")
-    if 'snake_pos' not in st.session_state: 
-        st.session_state.snake_pos = [random.randint(0,4), random.randint(0,4)]
-        st.session_state.comida = [random.randint(0,4), random.randint(0,4)]
-
-    # Desenha o tabuleiro 5x5
-    grid = ""
-    for r in range(5):
-        row = ""
-        for c in range(5):
-            if [r, c] == st.session_state.snake_pos: row += "🐍"
-            elif [r, c] == st.session_state.comida: row += "🍎"
-            else: row += "⬛"
-        grid += row + "\n\n"
-    
-    st.text(grid)
-
-    # Controles D-PAD
-    c1, c2, c3 = st.columns(3)
-    with c2: 
-        if st.button("⬆️"): 
-            if st.session_state.snake_pos[0] > 0: st.session_state.snake_pos[0] -= 1
-    
-    c4, c5, c6 = st.columns(3)
-    with c4: 
-        if st.button("⬅️"): 
-            if st.session_state.snake_pos[1] > 0: st.session_state.snake_pos[1] -= 1
-    with c5: 
-        if st.button("⬇️"): 
-            if st.session_state.snake_pos[0] < 4: st.session_state.snake_pos[0] += 1
-    with c6: 
-        if st.button("➡️"): 
-            if st.session_state.snake_pos[1] < 4: st.session_state.snake_pos[1] += 1
-
-    # Lógica da Comida
-    if st.session_state.snake_pos == st.session_state.comida:
-        st.session_state.moedas += 10
-        st.session_state.comida = [random.randint(0,4), random.randint(0,4)]
-        st.toast("NHAM! +10 Moedas")
-        st.rerun()
-
-# --- 4. ADIVINHAÇÃO ---
-elif menu == "Adivinhação":
-    st.title("🧠 MENTE MESTRA")
-    if 'segredo' not in st.session_state: st.session_state.segredo = random.randint(1, 20)
-    
-    st.write("Estou pensando em um número de 1 a 20...")
-    chute = st.number_input("Qual seu chute?", min_value=1, max_value=20)
-    
+# --- JOGO 2: ADIVINHAÇÃO ---
+def guessing_game():
+    st.subheader("🧠 Adivinhe o Número")
+    if 'secret' not in st.session_state: st.session_state.secret = random.randint(1, 10)
+    chute = st.number_input("Tente de 1 a 10:", min_value=1, max_value=10)
     if st.button("CHUTAR"):
-        if chute == st.session_state.segredo:
-            st.success(f"Acertou! Ganhou 50 moedas!")
+        if chute == st.session_state.secret:
+            st.success("Acertou! +50 Moedas")
             st.session_state.moedas += 50
-            st.session_state.segredo = random.randint(1, 20)
-            st.balloons()
-        elif chute < st.session_state.segredo:
-            st.warning("Mais alto!")
+            st.session_state.secret = random.randint(1, 10)
         else:
-            st.warning("Mais baixo!")
+            st.warning("Errou! Tente novamente.")
 
-st.sidebar.write("---")
-st.sidebar.metric("💰 SALDO", st.session_state.moedas)
-if st.sidebar.button("Resetar Tudo"):
+# --- INTERFACE PRINCIPAL ---
+st.title("🕹️ ARCADE MOBILE")
+st.sidebar.title(f"💰 Moedas: {st.session_state.moedas}")
+
+menu = st.sidebar.radio("ESCOLHA O JOGO:", ["Menu Inicial", "Slot Machine", "Adivinhação"])
+
+if menu == "Menu Inicial":
+    st.write("Bem-vindo ao seu Arcade portátil!")
+    st.info("Selecione um jogo no menu lateral para começar a ganhar moedas.")
+elif menu == "Slot Machine":
+    slot_machine()
+elif menu == "Adivinhação":
+    guessing_game()
+
+if st.sidebar.button("Resetar Saldo"):
     st.session_state.moedas = 100
     st.rerun()
