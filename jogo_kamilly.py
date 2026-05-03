@@ -23,69 +23,67 @@ familia = {
 
 # --- 3. ESTADOS ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-# Grade agora com 6 espaços para o formato 2x3
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 4. CSS PARA FORMATO 2x3 COLADO (ESTILO AZUL) ---
+# --- 4. CSS PARA FORÇAR 2 COLUNAS LADO A LADO NO CELULAR ---
 st.markdown("""
     <style>
     .main { background-color: #050a1a; }
     
-    /* FORÇA 2 COLUNAS LADO A LADO SEM ESPAÇO (GAP ZERO) */
+    /* FORÇA AS COLUNAS A FICAREM LADO A LADO (NÃO DEIXA EMPILHAR) */
     div[data-testid="column"] {
-        width: 50% !important;
-        flex: 1 1 50% !important;
-        min-width: 50% !important;
-        padding: 0px !important;
-        margin: 0px !important;
+        width: 48% !important;
+        flex: 1 1 48% !important;
+        min-width: 48% !important;
     }
     
-    /* REMOVE O ESPAÇAMENTO PADRÃO DO STREAMLIT */
+    /* REMOVE O ESPAÇO ENTRE AS COLUNAS E FORÇA A LINHA */
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
-        gap: 0px !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
         justify-content: center !important;
     }
 
     .arcade-frame {
-        border: 10px solid #0055ff; /* Moldura azul da foto */
-        border-radius: 25px;
+        border: 8px solid #0055ff;
+        border-radius: 20px;
         background: #0a2a7a;
-        padding: 0px; 
-        box-shadow: 0 0 40px #0055ff;
-        max-width: 300px; /* Ajustado para 2 colunas */
+        padding: 5px; 
+        box-shadow: 0 0 30px #0055ff;
+        max-width: 320px;
         margin: auto;
         overflow: hidden;
     }
 
     img { 
         border: 1px solid rgba(255, 215, 0, 0.2); 
-        height: 140px !important; /* Mais alto para o 2x3 */
+        height: 150px !important; 
         width: 100% !important; 
         object-fit: cover; 
+        border-radius: 10px;
     }
     
     .slot-reserva {
-        height: 140px; background: #0a2a7a; border: 1px solid rgba(255, 215, 0, 0.2);
-        display: flex; align-items: center; justify-content: center; font-size: 45px;
+        height: 150px; background: #0a2a7a; border: 1px solid rgba(255, 215, 0, 0.2);
+        display: flex; align-items: center; justify-content: center; font-size: 40px;
+        border-radius: 10px;
     }
     
     .moedas-banner {
         background: linear-gradient(90deg, #00ff00, #008000);
-        color: white; padding: 12px; border-radius: 50px;
-        font-size: 32px; font-weight: bold; text-align: center;
-        box-shadow: 0 0 20px #00ff00; max-width: 280px; margin: 0 auto 20px auto;
+        color: white; padding: 10px; border-radius: 50px;
+        font-size: 28px; font-weight: bold; text-align: center;
+        box-shadow: 0 0 15px #00ff00; max-width: 260px; margin: 0 auto 15px auto;
     }
     
-    /* BOTÃO CIRCULAR IGUAL À FOTO */
     .stButton>button {
         background: radial-gradient(circle, #666, #333) !important;
         color: white !important; font-size: 35px !important; 
         height: 80px !important; width: 80px !important;
         border-radius: 50% !important; border: 4px solid #ccc !important;
         margin: 20px auto !important; display: block !important;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -99,7 +97,7 @@ def tocar_som(tipo):
     st.components.v1.html(f"<audio autoplay><source src='{sons[tipo]}' type='audio/mp3'></audio>", height=0)
 
 # --- 6. INTERFACE ---
-st.markdown("<h1 style='text-align:center; color:#0055ff; font-size:26px;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; color:#0055ff; font-size:24px;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
 caixa_roleta = st.empty()
@@ -107,7 +105,7 @@ caixa_roleta = st.empty()
 def mostrar_roleta(lista_atual):
     with caixa_roleta.container():
         st.markdown('<div class="arcade-frame">', unsafe_allow_html=True)
-        # 3 linhas de 2 colunas (Formato 2x3)
+        # 3 linhas de 2 colunas cada
         for r in range(3):
             cols = st.columns(2)
             for c in range(2):
@@ -130,7 +128,7 @@ if st.button("↻"):
         st.session_state.moedas -= 50
         tocar_som("giro")
         
-        # ANIMAÇÃO DE GIRO
+        # ANIMAÇÃO
         for _ in range(6):
             grade_vibrando = [random.choice(list(familia.keys())) for _ in range(6)]
             mostrar_roleta(grade_vibrando)
@@ -144,7 +142,6 @@ if st.button("↻"):
             mostrar_roleta(st.session_state.grade)
             st.balloons()
             tocar_som("ganhou")
-            st.success(f"🏆 JACKPOT 2x3! +$2500")
         else:
             st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(6)]
             mostrar_roleta(st.session_state.grade)
