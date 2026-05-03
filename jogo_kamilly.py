@@ -19,12 +19,22 @@ familia = {
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 3. CSS "COLA TOTAL" (REMOÇÃO DO VÃO PRETO) ---
+# --- 3. CSS "TRAVA MOBILE" (FORÇA LADO A LADO E JUNTA TUDO) ---
 st.markdown("""
     <style>
     .main { background-color: #050a1a; }
     
-    /* ZERA ESPAÇO ENTRE COLUNAS */
+    /* 1. FORÇA O CONTAINER A NÃO QUEBRAR A LINHA NO CELULAR */
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important; /* Proíbe empilhar uma embaixo da outra */
+        gap: 0px !important;         /* Junta as colunas no centro */
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    /* 2. DEFINE LARGURA FIXA PARA AS DUAS COLUNAS */
     div[data-testid="column"] {
         width: 50% !important;
         flex: 1 1 50% !important;
@@ -32,23 +42,8 @@ st.markdown("""
         padding: 0px !important;
         margin: 0px !important;
     }
-    
-    /* ZERA ESPAÇO DO BLOCO DE COLUNAS */
-    div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 0px !important; 
-        justify-content: center !important;
-        padding: 0px !important;
-    }
 
-    /* REMOVE ESPAÇOS VERTICAIS INTERNOS DO STREAMLIT */
-    div[data-testid="stVerticalBlock"] > div {
-        padding: 0px !important;
-        margin: 0px !important;
-    }
-
+    /* 3. MOLDURA E IMAGENS */
     .arcade-frame {
         border: 8px solid #0055ff;
         border-radius: 20px;
@@ -58,16 +53,14 @@ st.markdown("""
         max-width: 320px;
         margin: auto;
         overflow: hidden;
-        line-height: 0; /* Remove vãos entre linhas */
+        line-height: 0; 
     }
 
     img { 
-        display: block; /* Remove espaços vazios na base */
+        display: block;
         height: 160px !important; 
         width: 100% !important; 
         object-fit: cover; 
-        margin: 0px !important;
-        padding: 0px !important;
     }
     
     .slot-reserva {
@@ -101,7 +94,6 @@ caixa_roleta = st.empty()
 def mostrar_roleta(lista_atual):
     with caixa_roleta.container():
         st.markdown('<div class="arcade-frame">', unsafe_allow_html=True)
-        # 3 linhas de 2 colunas
         for r in range(3):
             cols = st.columns(2)
             for c in range(2):
