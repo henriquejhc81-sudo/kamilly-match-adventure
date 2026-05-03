@@ -1,11 +1,10 @@
 import streamlit as st
 import random
-import os
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🎰")
 
-# --- 2. BANCO DE DADOS ---
+# --- 2. BANCO DE DADOS (FOTO E EMOJI) ---
 familia = {
     "Kamilly": ["kamilly.jpg", "👑"], "Papai Rick": ["papai.jpg", "🧔"], 
     "Mamãe": ["mamae.jpg", "👩‍🦰"], "Kauan": ["kauan.jpg", "🤙"], 
@@ -19,21 +18,22 @@ familia = {
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["Kamilly"] * 9
 
-# --- 4. ESTILIZAÇÃO CSS (FOCO EM MOBILE) ---
+# --- 4. ESTILIZAÇÃO CSS (FIXO PARA ANDROID) ---
 st.markdown("""
     <style>
     .main { background: #000b1e; color: white; }
     .slot-frame {
         border: 6px solid #ffd700; border-radius: 15px;
         background: rgba(0, 0, 0, 0.9); padding: 5px;
-        box-shadow: 0 0 15px #ffd700; max-width: 320px; margin: auto;
+        box-shadow: 0 0 15px #ffd700; max-width: 330px; margin: auto;
     }
+    /* FORÇA AS 3 COLUNAS SEMPRE LADO A LADO */
     div[data-testid="column"] {
         width: 32% !important; flex: 1 1 32% !important; min-width: 32% !important;
     }
     div[data-testid="stHorizontalBlock"] {
         display: flex !important; flex-direction: row !important;
-        flex-wrap: nowrap !important; justify-content: center !important; gap: 2px !important;
+        flex-wrap: nowrap !important; justify-content: center !important; gap: 3px !important;
     }
     img { 
         border-radius: 8px; border: 2px solid gold; 
@@ -47,8 +47,8 @@ st.markdown("""
     .stButton>button {
         background: radial-gradient(circle, #ffd700, #b8860b) !important;
         color: black !important; border-radius: 50px !important;
-        font-weight: bold !important; height: 55px !important;
-        font-size: 18px !important; margin-top: 10px !important;
+        font-weight: bold !important; height: 60px !important;
+        font-size: 20px !important; margin-top: 10px !important;
     }
     .moedas { color: #00ff00; font-size: 30px; font-weight: bold; text-align: center; }
     h1 { color: #ffd700; text-align: center; font-size: 20px; }
@@ -69,6 +69,7 @@ with st.sidebar:
 if opcao == "🎰 Jackpot":
     st.markdown("<h1>🎰 FESTA DO JACKPOT 🎰</h1>", unsafe_allow_html=True)
     st.markdown('<div class="slot-frame">', unsafe_allow_html=True)
+    
     for r in range(3):
         cols = st.columns(3)
         for c in range(3):
@@ -77,9 +78,11 @@ if opcao == "🎰 Jackpot":
             dados = familia.get(nome_p, ["", "❓"])
             foto, emoji = dados, dados[1]
 
-            if foto != "" and os.path.exists(foto):
+            # Lógica Blindada: Tenta carregar imagem, se der qualquer erro, mostra o emoji
+            try:
+                if foto == "": raise Exception("Vazio")
                 cols[c].image(foto, use_container_width=True)
-            else:
+            except:
                 cols[c].markdown(f"""
                     <div class="slot-box">
                         <span style='font-size:25px;'>{emoji}</span>
@@ -100,4 +103,4 @@ if opcao == "🎰 Jackpot":
                 st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
             st.rerun()
 else:
-    st.info("Selecione 'Jackpot' no menu para jogar!")
+    st.info("Escolha 'Jackpot' para jogar!")
