@@ -3,26 +3,28 @@ import random
 import os
 import time
 
-# --- 1. CONFIGURAÇÃO ARCADE ---
+# --- 1. CONFIGURAÇÃO DE APP CELULAR (PWA) ---
 st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🕹️")
+
+# Script para transformar em App de celular
+st.markdown('<link rel="manifest" href="manifest.json">', unsafe_allow_html=True)
 
 st.markdown("""
     <style>
     .main { background: linear-gradient(135deg, #001f3f, #0074D9); }
     .arcade-card {
         border: 5px solid #ffd700; border-radius: 20px;
-        background: rgba(0, 0, 0, 0.8); padding: 20px;
-        box-shadow: 0 0 50px #ffd700; text-align: center; margin: auto;
+        background: rgba(0, 0, 0, 0.8); padding: 15px;
+        box-shadow: 0 0 40px #ffd700; text-align: center;
     }
-    img { border-radius: 15px; border: 3px solid gold; object-fit: cover; height: 100px !important; width: 100px !important; }
+    img { border-radius: 12px; border: 2px solid gold; object-fit: cover; height: 90px !important; width: 90px !important; }
     .stButton>button {
         background: radial-gradient(circle, #ffd700, #b8860b) !important;
         color: black !important; border-radius: 50px !important;
-        font-weight: bold !important; height: 60px !important; width: 100% !important;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.5) !important;
+        font-weight: bold !important; height: 50px !important; width: 100% !important;
     }
-    .balance { color: #00ff00; font-size: 35px; font-weight: bold; text-align: center; }
-    h1 { color: #ffd700; text-align: center; font-size: 30px; text-shadow: 2px 2px #000; }
+    .balance { color: #00ff00; font-size: 30px; font-weight: bold; text-align: center; }
+    h1 { color: #ffd700; text-align: center; font-size: 24px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -40,30 +42,26 @@ if 'cartucho' not in st.session_state: st.session_state.cartucho = "🎰 ROLETA"
 # --- 4. PLAYER DE SOM AUTOMÁTICO ---
 st.components.v1.html("""
     <audio id="arcade-music" loop autoplay><source src="https://soundhelix.com" type="audio/mp3"></audio>
-    <script>
-        document.body.addEventListener('click', function() {
-            var audio = document.getElementById('arcade-music');
-            audio.play();
-        }, {once: true});
-    </script>
+    <script>document.body.addEventListener('click', function() { document.getElementById('arcade-music').play(); }, {once: true});</script>
 """, height=0)
 
-# --- 5. MENU LATERAL ---
+# --- 5. MENU LATERAL (EMULADOR) ---
 with st.sidebar:
-    st.title("🎮 MENU ARCADE")
-    jogos = ["🎰 ROLETA", "🧩 MEMÓRIA", "🐯 TIGRINHO", "🔨 MARRETA", "📦 CAIXA"]
-    st.session_state.cartucho = st.selectbox("ESCOLHA O JOGO:", jogos)
+    st.title("🎮 SELECIONE O JOGO")
+    jogos = ["🎰 ROLETA", "🧩 MEMÓRIA", "🐯 TIGRINHO", "🔨 MARRETA", "📦 CAIXA", "🎯 ALVO", "🏃 CORRIDA", "🃏 CARTAS", "🪐 ESPAÇO", "🍦 SORVETERIA"]
+    st.session_state.cartucho = st.selectbox("LISTA DE JOGOS:", jogos)
     st.divider()
     st.markdown(f"<p class='balance'>💰 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
-    if st.button("🔄 REBOOT SISTEMA"): st.session_state.moedas = 1000; st.rerun()
+    if st.button("🔄 REBOOT"): st.session_state.moedas = 1000; st.rerun()
 
-# --- 🎮 JOGO 1: ROLETA ---
+# --- 🎮 LÓGICA DOS 10 JOGOS ---
+
 if st.session_state.cartucho == "🎰 ROLETA":
     st.markdown("<h1>🎰 ROLETA DA FAMÍLIA</h1>", unsafe_allow_html=True)
     if 'grade' not in st.session_state: st.session_state.grade = random.sample(list(familia.keys()) * 2, 9)
     st.markdown('<div class="arcade-card">', unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
-    ps = [c1.empty(), c2.empty(), c3.empty(), c1.empty(), c2.empty(), c3.empty(), c1.empty(), c2.empty(), c3.empty()]
+    cols = st.columns(3)
+    ps = [cols[i%3].empty() for i in range(9)]
     def render(lista):
         for i in range(9):
             img = familia.get(lista[i])
@@ -71,57 +69,86 @@ if st.session_state.cartucho == "🎰 ROLETA":
             else: ps[i].write(f"📸\n{lista[i]}")
     render(st.session_state.grade)
     st.markdown('</div>', unsafe_allow_html=True)
-    if st.button("🔥 GIRAR ROLETA ($50)"):
+    if st.button("🔥 GIRAR ($50)"):
         if st.session_state.moedas >= 50:
             st.session_state.moedas -= 50
-            for _ in range(8):
+            for _ in range(6):
                 render([random.choice(list(familia.keys())) for _ in range(9)])
                 time.sleep(0.05)
             st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
             render(st.session_state.grade)
-            if st.session_state.grade[3] == st.session_state.grade[4] == st.session_state.grade:
+            if len(set(st.session_state.grade[3:6])) == 1:
                 st.session_state.moedas += 2000
                 st.balloons()
             st.rerun()
 
-# --- 🎮 JOGO 2: MARRETA ---
-elif st.session_state.cartucho == "🔨 MARRETA":
-    st.markdown("<h1>🔨 MARRETA NA FOTO!</h1>", unsafe_allow_html=True)
-    escolhido = random.choice(list(familia.keys()))
-    if os.path.exists(familia[escolhido]): st.image(familia[escolhido], width=200)
-    if st.button(f"CLIQUE RÁPIDO EM {escolhido}!"):
-        st.session_state.moedas += 10
-        st.toast("+10 moedas!", icon="🔨")
-        st.rerun()
-
-# --- 🎮 JOGO 3: CAIXA (CORRIGIDO) ---
-elif st.session_state.cartucho == "📦 CAIXA":
-    st.markdown("<h1>📦 CAIXA SURPRESA</h1>", unsafe_allow_html=True)
-    st.write("### Escolha uma caixa e boa sorte!")
+elif st.session_state.cartucho == "🧩 MEMÓRIA":
+    st.markdown("<h1>🧩 MEMÓRIA RÁPIDA</h1>", unsafe_allow_html=True)
+    escolha = random.choice(list(familia.keys()))
+    st.write(f"### Onde está {escolha}?")
     cols = st.columns(3)
     for i in range(3):
-        if cols[i].button(f"ABRIR CAIXA {i+1}"):
-            # CORREÇÃO AQUI: Lista de prêmios definida
-            premio = random.choice()
-            st.session_state.moedas += premio
-            if premio > 0:
-                st.balloons()
-                st.success(f"UAU! VOCÊ GANHOU ${premio}!")
-            else:
-                st.error("Poxa, essa estava vazia!")
-            time.sleep(1)
-            st.rerun()
+        if cols[i].button(f"OPÇÃO {i+1}"):
+            if random.random() > 0.5:
+                st.session_state.moedas += 100; st.success("ACERTOU!"); st.balloons()
+            else: st.error("ERROU!")
+            time.sleep(1); st.rerun()
 
-# --- 🎮 JOGO 4: TIGRINHO ---
 elif st.session_state.cartucho == "🐯 TIGRINHO":
     st.markdown("<h1>🐯 TIGRINHO FORTUNE</h1>", unsafe_allow_html=True)
-    st.image("https://icons8.com")
     if st.button("🍀 APOSTAR $100"):
         if st.session_state.moedas >= 100:
             st.session_state.moedas -= 100
-            if random.random() > 0.7:
-                st.session_state.moedas += 1500
-                st.balloons()
-                st.success("JACKPOT TIGRÃO! +$1500")
-            else: st.error("Não foi dessa vez!")
+            if random.random() > 0.8:
+                st.session_state.moedas += 2000; st.balloons(); st.success("JACKPOT!")
+            else: st.error("Tente de novo!")
             st.rerun()
+
+elif st.session_state.cartucho == "🔨 MARRETA":
+    st.markdown("<h1>🔨 BATA NA FOTO</h1>", unsafe_allow_html=True)
+    p = random.choice(list(familia.keys()))
+    if os.path.exists(familia[p]): st.image(familia[p], width=150)
+    if st.button("BATER!"):
+        st.session_state.moedas += 20; st.toast("+20 Moedas!"); st.rerun()
+
+elif st.session_state.cartucho == "📦 CAIXA":
+    st.markdown("<h1>📦 CAIXA SURPRESA</h1>", unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
+    if c1.button("CAIXA A"):
+        p = random.choice()
+        st.session_state.moedas += p; st.write(f"Ganhou ${p}!")
+    if c2.button("CAIXA B"):
+        p = random.choice()
+        st.session_state.moedas += p; st.write(f"Ganhou ${p}!")
+
+elif st.session_state.cartucho == "🎯 ALVO":
+    st.write("<h1>🎯 ACERTE O ALVO</h1>", unsafe_allow_html=True)
+    if st.button("LANÇAR DARDO!"):
+        p = random.randint(0, 100)
+        st.session_state.moedas += p; st.success(f"Acertou {p} pontos!")
+
+elif st.session_state.cartucho == "🏃 CORRIDA":
+    st.write("<h1>🏃 CORRIDA DA FAMÍLIA</h1>", unsafe_allow_html=True)
+    if st.button("CORRER!"):
+        with st.status("Correndo..."):
+            time.sleep(1)
+            p = random.choice()
+            st.session_state.moedas += p; st.write(f"Chegou em 1º! Ganhou {p}")
+
+elif st.session_state.cartucho == "🃏 CARTAS":
+    st.write("<h1>🃏 MAIOR OU MENOR?</h1>", unsafe_allow_html=True)
+    if st.button("Puxar Carta"):
+        n = random.randint(1, 10)
+        st.write(f"Carta: {n}")
+        if n > 5: st.session_state.moedas += 50; st.success("Ganhou!")
+
+elif st.session_state.cartucho == "🪐 ESPAÇO":
+    st.write("<h1>🪐 VIAGEM ESPACIAL</h1>", unsafe_allow_html=True)
+    if st.button("Decolar!"):
+        st.session_state.moedas += 150; st.snow(); st.success("Visitou Marte! +150")
+
+elif st.session_state.cartucho == "🍦 SORVETERIA":
+    st.write("<h1>🍦 MONTE O SORVETE</h1>", unsafe_allow_html=True)
+    sabor = st.selectbox("Sabor:", ["Morango", "Chocolate", "Kamilly Special"])
+    if st.button("Vender!"):
+        st.session_state.moedas += 80; st.toast("Vendido! +80")
