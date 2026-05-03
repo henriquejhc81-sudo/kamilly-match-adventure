@@ -3,37 +3,51 @@ import random
 import os
 import time
 
-# --- 1. CONFIGURAÇÃO ARCADE ---
-st.set_page_config(page_title="KAMILLY ARCADE PRO", layout="wide", page_icon="🕹️")
+# --- 1. CONFIGURAÇÃO ARCADE PRO ---
+st.set_page_config(page_title="KAMILLY ARCADE PRO", layout="centered", page_icon="🕹️")
 
 st.markdown("""
     <style>
     .main { background: #0e1117; }
-    .arcade-card {
-        border: 4px solid #ffd700; border-radius: 20px;
-        background: rgba(255, 255, 255, 0.05); padding: 15px;
-        text-align: center; box-shadow: 0 0 20px #ffd700;
+    /* CENTRALIZA E TRAVA O TAMANHO DO JOGO */
+    .arcade-container {
+        max-width: 450px;
+        margin: auto;
+        padding: 15px;
+        border: 4px solid #ffd700;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 0 30px #ffd700;
+        text-align: center;
     }
-    img { border-radius: 15px; border: 2px solid white; object-fit: cover; }
+    img { 
+        border-radius: 12px; 
+        border: 2px solid white; 
+        height: 120px !important; 
+        width: 120px !important; 
+        object-fit: cover;
+    }
     .stButton>button {
         background: linear-gradient(180deg, #ffd700, #b8860b) !important;
         color: black !important; border-radius: 50px !important;
         font-weight: bold !important; height: 60px !important; width: 100% !important;
+        font-size: 20px !important; box-shadow: 0 5px 15px rgba(255,215,0,0.3) !important;
     }
-    .moedas { color: #00ff00; font-size: 30px; font-weight: bold; text-align: center; }
+    .moedas { color: #00ff00; font-size: 35px; font-weight: bold; text-align: center; margin-bottom: 10px; }
+    h1 { color: #ffd700; text-align: center; font-size: 28px; text-shadow: 2px 2px #000; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. DATABASE FAMÍLIA (NOMES EXATOS) ---
+# --- 2. DATABASE FAMÍLIA ---
 familia = {
     "Papai Rick": "papai.jpg", "Kamilly": "kamilly.jpg", "Mamãe": "mamae.jpg",
     "Kauan": "kauan.jpg", "Vovô G.": "vovo_geraldo.jpg", "Vovô M.": "vovo_mario.jpg",
     "Tio MK": "tio_mk.jpg", "Vovó N.": "vovo_neusa.jpg", "Padrinho": "tio_padrinho.jpg"
 }
 
-# --- 3. ESTADOS DO SISTEMA ---
+# --- 3. ESTADOS ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-if 'cartucho' not in st.session_state: st.session_state.cartucho = "🎰 ROLETA"
+if 'grade' not in st.session_state: st.session_state.grade = random.sample(list(familia.keys()) * 2, 9)
 
 # --- 4. PLAYER DE SOM AUTOMÁTICO ---
 st.components.v1.html("""
@@ -41,50 +55,53 @@ st.components.v1.html("""
     <script>document.body.addEventListener('click', function() { document.getElementById('arcade-sound').play(); }, {once: true});</script>
 """, height=0)
 
-# --- 5. INTERFACE DO EMULADOR ---
-with st.sidebar:
-    st.image("https://icons8.com")
-    st.title("🎮 ARCADE MENU")
-    st.session_state.cartucho = st.radio("SELECIONE O CARTUCHO:", ["🎰 ROLETA", "🧩 MEMÓRIA", "🐯 TIGRINHO"])
-    st.divider()
-    st.markdown(f"<p class='moedas'>🪙 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
-    if st.button("🔄 REBOOT SISTEMA"): st.session_state.moedas = 1000; st.rerun()
+# --- 5. INTERFACE CENTRALIZADA ---
+st.markdown("<h1>🕹️ KAMILLY ARCADE PRO</h1>", unsafe_allow_html=True)
+st.markdown(f"<p class='moedas'>🪙 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
 
-# --- CARTUCHO 1: ROLETA DA SORTE ---
-if st.session_state.cartucho == "🎰 ROLETA":
-    st.title("🎰 ROLETA DA FAMÍLIA")
-    if 'grade' not in st.session_state: st.session_state.grade = random.sample(list(familia.keys()) * 2, 9)
-    
-    # Grid de Fotos Blindado
-    cols = st.columns(3)
+# O JOGO FICA DENTRO DESTE CONTAINER
+st.markdown('<div class="arcade-container">', unsafe_allow_html=True)
+cols = st.columns(3)
+placeholders = []
+for i in range(9):
+    with cols[i % 3]:
+        placeholders.append(st.empty())
+
+def renderizar(lista):
     for i in range(9):
-        with cols[i % 3]:
-            nome = st.session_state.grade[i]
-            foto = familia.get(nome)
-            # TRAVA ANTI-ERRO: Só mostra se a foto existir
-            if foto and os.path.exists(foto): st.image(foto, use_column_width=True)
-            else: st.info(f"📸 {nome}")
+        nome = lista[i]
+        foto = familia.get(nome)
+        if foto and os.path.exists(foto):
+            placeholders[i].image(foto, use_column_width=True)
+        else:
+            placeholders[i].markdown(f"<div style='height:120px; display:flex; align-items:center; justify-content:center; color:white; border:1px solid #444; border-radius:10px;'>{nome}</div>", unsafe_allow_html=True)
 
-    if st.button("🔥 GIRAR ROLETA ($50)"):
-        if st.session_state.moedas >= 50:
-            st.session_state.moedas -= 50
-            st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
-            # Lógica de Vitória (Linha do meio)
-            if st.session_state.grade[3] == st.session_state.grade[4] == st.session_state.grade:
-                st.session_state.moedas += 1000
-                st.balloons()
-            st.rerun()
+renderizar(st.session_state.grade)
+st.markdown('</div>', unsafe_allow_html=True)
 
-# --- CARTUCHO 2: JOGO DE MEMÓRIA ---
-elif st.session_state.cartucho == "🧩 MEMÓRIA":
-    st.title("🧩 MEMÓRIA EM FAMÍLIA")
-    st.write("### Combine os pares para ganhar moedas!")
-    st.warning("O cartucho está sendo carregado... Jogue a Roleta enquanto isso!")
+st.write("") # Espaço
 
-# --- CARTUCHO 3: TIGRINHO DA SORTE ---
-elif st.session_state.cartucho == "🐯 TIGRINHO":
-    st.title("🐯 TIGRINHO FORTUNE")
-    st.markdown("### <center>💰 TENTE A SORTE GRANDE! 💰</center>", unsafe_allow_html=True)
-    st.image("https://icons8.com")
-    if st.button("🍀 APOSTAR TUDO"):
-        st.toast("O Tigrão está dormindo... Volte mais tarde!")
+# BOTÃO DE GIRO ABAIXO DO CONTAINER
+if st.button("🔥 GIRAR ROLETA ($50)"):
+    if st.session_state.moedas >= 50:
+        st.session_state.moedas -= 50
+        # Animação de giro rápido
+        for _ in range(10):
+            temp = [random.choice(list(familia.keys())) for _ in range(9)]
+            renderizar(temp)
+            time.sleep(0.06)
+        
+        st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
+        renderizar(st.session_state.grade)
+        
+        # Lógica de Vitória (Linha do meio)
+        if st.session_state.grade[3] == st.session_state.grade[4] == st.session_state.grade:
+            st.session_state.moedas += 1000
+            st.balloons()
+        st.rerun()
+
+with st.sidebar:
+    st.title("⚙️ CONFIG")
+    if st.button("🔄 REBOOT"):
+        st.session_state.moedas = 1000
+        st.rerun()
