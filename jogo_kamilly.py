@@ -4,7 +4,7 @@ import time
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO DE ALTA PERFORMANCE ---
+# --- 1. CONFIGURAÇÃO ---
 st.set_page_config(page_title="KAMILLY ARCADE PRO", layout="centered", page_icon="🎰")
 
 # --- 2. BANCO DE DADOS (11 PERSONAGENS PRESERVADOS) ---
@@ -17,7 +17,7 @@ familia_config = {
     "vovo_neusa": ["vovo_neusa.jpg", "🌸"]
 }
 
-# --- 3. CACHE ATÔMICO (EVITA TELA PRETA E LAG) ---
+# --- 3. CACHE DE IMAGENS ---
 @st.cache_data
 def carregar_tudo_b64():
     memo = {}
@@ -36,7 +36,7 @@ assets = carregar_tudo_b64()
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 4. CSS BLINDADO (FIM DA TREPIDAÇÃO E IMAGEM FOSCA) ---
+# --- 4. CSS: ANIMAÇÃO DE ROLETA REAL E DESIGN ---
 st.markdown("""
     <style>
     .block-container { padding-top: 0rem !important; margin-top: -60px !important; }
@@ -47,7 +47,6 @@ st.markdown("""
         color: #FF69B4; text-align: center; font-size: 60px; 
         font-family: 'Comic Sans MS', cursive;
         text-shadow: 0 0 15px #FF69B4, 2px 2px #fff;
-        margin-bottom: 0px;
     }
 
     .arcade-frame {
@@ -55,7 +54,6 @@ st.markdown("""
         background: #000; padding: 0px; margin: auto;
         overflow: hidden; max-width: 310px;
         box-shadow: 0 0 35px #0055ff;
-        line-height: 0;
     }
 
     .grid-container {
@@ -63,21 +61,19 @@ st.markdown("""
         grid-gap: 0px; width: 100%;
     }
 
-    /* ANIMAÇÃO DE ROLETA REAL (MOVIMENTO VERTICAL LISO) */
-    .slot-move {
-        animation: slideSlot 0.1s infinite linear;
-        filter: none !important; /* REMOVE O FOSCO */
+    /* ESTILO ROLETA: MOVIMENTO VERTICAL INFINITO DURANTE O GIRO */
+    .slot-rolling {
+        animation: rollEffect 0.15s infinite linear;
     }
 
-    @keyframes slideSlot {
-        0% { transform: translateY(-5px); }
-        50% { transform: translateY(5px); }
-        100% { transform: translateY(-5px); }
+    @keyframes rollEffect {
+        0% { transform: translateY(0px); }
+        100% { transform: translateY(-50px); }
     }
 
     .grid-container img {
         width: 100%; height: 155px; object-fit: cover; display: block;
-        border: 0.1px solid rgba(255,255,255,0.1);
+        border-bottom: 1px solid #111;
     }
 
     .moedas-banner {
@@ -91,71 +87,75 @@ st.markdown("""
     .stButton>button {
         background: linear-gradient(145deg, #FF69B4, #FF1493) !important;
         color: white !important; font-size: 26px !important; font-weight: bold !important;
-        height: 75px !important; width: 100% !important; max-width: 280px !important;
+        height: 70px !important; width: 100% !important; max-width: 280px !important;
         border-radius: 50px !important; border: 4px solid #fff !important;
-        margin: 10px auto !important; display: block !important;
+        margin: 15px auto !important; display: block !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. MOTOR DE ÁUDIO ---
+# --- 5. MOTOR DE SOM (JS BLINDADO) ---
 def play_sound(tipo):
     urls = {
         'spin': 'https://soundjay.com',
         'win': 'https://soundjay.com'
     }
-    st.components.v1.html(f"<audio autoplay><source src='{urls[tipo]}' type='audio/mp3'></audio>", height=0)
+    # Injeta som via JS para garantir execução imediata
+    st.components.v1.html(f"""
+        <script>
+        var audio = new Audio('{urls[tipo]}');
+        audio.play();
+        </script>
+    """, height=0)
 
 # --- 6. INTERFACE ---
 st.markdown("<p class='kamilly-header'>Kamilly</p>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
-# CONTAINER FIXO (Evita que a tela pule ou fique preta)
-placeholder_roleta = st.empty()
+placeholder = st.empty()
 
-def render_ui(lista, animar=False):
-    css_classe = "slot-move" if animar else ""
-    html = f'<div class="arcade-frame"><div class="grid-container {css_classe}">'
+def render_ui(lista, rolando=False):
+    classe_rolar = "slot-rolling" if rolando else ""
+    html = f'<div class="arcade-frame"><div class="grid-container {classe_rolar}">'
     for nome in lista:
         url_b64 = assets.get(nome)
         if url_b64:
             html += f'<img src="{url_b64}">'
         else:
             emoji = familia_config[nome][1]
-            html += f'<div style="height:155px; background:#111; display:flex; align-items:center; justify-content:center; font-size:50px;">{emoji}</div>'
+            html += f'<div style="height:155px; display:flex; align-items:center; justify-content:center; font-size:50px;">{emoji}</div>'
     html += '</div></div>'
-    placeholder_roleta.markdown(html, unsafe_allow_html=True)
+    placeholder.markdown(html, unsafe_allow_html=True)
 
 render_ui(st.session_state.grade)
 
-# --- 7. LÓGICA DE GIRO PROFISSIONAL ---
+# --- 7. LÓGICA DE GIRO TURBO ---
 if st.button("VAMOS BRINCAR"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
         play_sound('spin')
         
-        # GIRO DE ALTA VELOCIDADE (Animação sem lag)
-        for i in range(12):
-            random_names = random.choices(list(familia_config.keys()), k=6)
-            render_ui(random_names, animar=True)
-            time.sleep(0.05)
+        # ANIMAÇÃO ESTILO ROLETA (Gira rápido e para)
+        for i in range(10):
+            grade_temp = random.choices(list(familia_config.keys()), k=6)
+            render_ui(grade_temp, rolando=True)
+            time.sleep(0.04) # Alta velocidade
         
         # RESULTADO (RNG)
         if random.random() < 0.35:
             venc = random.choice(list(familia_config.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2500
-            render_ui(st.session_state.grade, animar=False)
+            render_ui(st.session_state.grade, rolando=False)
             st.balloons()
             play_sound('win')
         else:
             st.session_state.grade = random.choices(list(familia_config.keys()), k=6)
-            render_ui(st.session_state.grade, animar=False)
+            render_ui(st.session_state.grade, rolando=False)
         
-        # Atualiza o saldo sem dar tela preta
         st.rerun()
     else:
-        st.error("Ops! Moedas acabaram.")
+        st.error("Ops! Suas moedas acabaram.")
 
 if st.sidebar.button("🔄 RECARREGAR"):
     st.session_state.moedas = 1000
