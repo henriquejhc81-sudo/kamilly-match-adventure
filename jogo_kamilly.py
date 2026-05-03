@@ -19,12 +19,12 @@ familia = {
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 3. CSS "SUPER COLADO" ---
+# --- 3. CSS "COLA TOTAL" (REMOÇÃO DO VÃO PRETO) ---
 st.markdown("""
     <style>
     .main { background-color: #050a1a; }
     
-    /* REMOVE QUALQUER ESPAÇO ENTRE COLUNAS */
+    /* ZERA ESPAÇO ENTRE COLUNAS */
     div[data-testid="column"] {
         width: 50% !important;
         flex: 1 1 50% !important;
@@ -33,7 +33,7 @@ st.markdown("""
         margin: 0px !important;
     }
     
-    /* ZERA O GAP DO BLOCO HORIZONTAL */
+    /* ZERA ESPAÇO DO BLOCO DE COLUNAS */
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -43,7 +43,7 @@ st.markdown("""
         padding: 0px !important;
     }
 
-    /* REMOVE ESPAÇOS INTERNOS DO STREAMLIT QUE CRIAM VÃOS */
+    /* REMOVE ESPAÇOS VERTICAIS INTERNOS DO STREAMLIT */
     div[data-testid="stVerticalBlock"] > div {
         padding: 0px !important;
         margin: 0px !important;
@@ -55,20 +55,19 @@ st.markdown("""
         background: #0a2a7a;
         padding: 0px; 
         box-shadow: 0 0 30px #0055ff;
-        max-width: 310px;
+        max-width: 320px;
         margin: auto;
         overflow: hidden;
-        line-height: 0; /* Remove vãos entre linhas de imagem */
+        line-height: 0; /* Remove vãos entre linhas */
     }
 
     img { 
-        display: block;
+        display: block; /* Remove espaços vazios na base */
         height: 160px !important; 
         width: 100% !important; 
         object-fit: cover; 
         margin: 0px !important;
         padding: 0px !important;
-        border: none !important; /* Remove bordas para colar 100% */
     }
     
     .slot-reserva {
