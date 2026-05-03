@@ -3,28 +3,49 @@ import random
 import os
 import time
 
-# --- 1. CONFIGURAÇÃO ---
-st.set_page_config(page_title="KAMILLY SUPER 9 SLOTS", layout="wide")
+# --- 1. CONFIGURAÇÃO DE DESIGN (ESTILO IMAGEM) ---
+st.set_page_config(page_title="KAMILLY LUCKY SLOT", layout="wide")
 
 st.markdown("""
     <style>
-    .main { background: #000; }
-    .slot-container {
-        border: 6px solid #FFD700;
-        border-radius: 20px;
-        background: #111;
+    /* Fundo Azul Royal da Imagem */
+    .main { background: linear-gradient(180deg, #0056ff 0%, #0033aa 100%); }
+    
+    /* Moldura Principal do Jogo */
+    .slot-frame {
+        border: 10px solid #4eb4ff;
+        border-radius: 30px;
+        background: #004aad;
         padding: 20px;
-        box-shadow: 0 0 50px #FFD700;
-        text-align: center;
+        box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 0 30px rgba(78, 180, 255, 0.5);
+        max-width: 700px;
+        margin: auto;
     }
+    
+    /* Botão Circular Central (Igual à Foto) */
     .stButton>button {
-        width: 100%; height: 80px; font-size: 30px !important;
-        background: linear-gradient(180deg, #FFD700, #B8860B) !important;
-        color: black !important; border-radius: 40px !important;
-        box-shadow: 0 8px 0 #664d00; font-weight: bold;
+        background: radial-gradient(circle, #888 0%, #333 100%) !important;
+        color: white !important;
+        border: 4px solid #fff !important;
+        border-radius: 50% !important;
+        width: 100px !important;
+        height: 100px !important;
+        font-size: 40px !important;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.4) !important;
+        margin-top: 20px !important;
+        transition: 0.2s;
     }
-    h1 { color: #FFD700; text-align: center; text-shadow: 0 0 10px #FFD700; }
-    .balance { color: #00FF00; font-size: 40px; text-align: center; font-family: monospace; }
+    .stButton>button:active { transform: scale(0.9) translateY(5px); }
+
+    /* Estilo das Cartas (Gelo/Azul) */
+    .item-box {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        border: 2px solid rgba(255,255,255,0.3);
+        margin: 5px;
+    }
+    
+    h1, h3 { color: white; text-align: center; font-family: 'Arial Rounded MT Bold'; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -36,80 +57,72 @@ parentes = {
 }
 
 # --- 3. ESTADOS ---
-if 'moedas' not in st.session_state: st.session_state.moedas = 5000
+if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: 
     st.session_state.grade = [random.choice(list(parentes.keys())) for _ in range(9)]
 
-# --- 4. MÚSICA (AUTO-PLAY NO CLIQUE) ---
+# --- 4. MÚSICA AUTOMÁTICA ---
 st.components.v1.html("""
-    <audio id="vegas-audio" loop>
+    <audio id="luck-sound" loop autoplay>
         <source src="https://soundhelix.com" type="audio/mp3">
     </audio>
     <script>
-        document.addEventListener('click', function() {
-            var audio = document.getElementById('vegas-audio');
-            audio.play();
+        document.body.addEventListener('click', function() {
+            document.getElementById('luck-sound').play();
         }, {once: true});
     </script>
 """, height=0)
 
 # --- 5. INTERFACE ---
-st.markdown("<h1>🎰 KAMILLY TURBO SLOTS 🎰</h1>", unsafe_allow_html=True)
-st.markdown(f"<div class='balance'>💰 $ {st.session_state.moedas}</div>", unsafe_allow_html=True)
+st.write("### 💎 KAMILLY LUCKY SLOT 💎")
+st.write(f"### <center>🪙 MOEDAS: {st.session_state.moedas}</center>", unsafe_allow_html=True)
 
-# ESPAÇO DO JOGO
-st.markdown('<div class="slot-container">', unsafe_allow_html=True)
-# Criamos os espaços vazios que serão preenchidos
-placeholders = []
-for r in range(3):
-    cols = st.columns(3)
-    for c in range(3):
-        placeholders.append(cols[c].empty())
+# MOLDURA AZUL (TABULEIRO 3x3)
+st.markdown('<div class="slot-frame">', unsafe_allow_html=True)
+col1, col2, col3 = st.columns(3)
+p = [col1.empty(), col2.empty(), col3.empty(), 
+     col1.empty(), col2.empty(), col3.empty(), 
+     col1.empty(), col2.empty(), col3.empty()]
 
-def desenhar_grade(lista):
+def desenhar(lista):
     for i in range(9):
-        img_path = parentes.get(lista[i])
-        if img_path and os.path.exists(img_path):
-            placeholders[i].image(img_path, width=150)
-        else:
-            placeholders[i].write(f"### {lista[i]}")
+        with p[i]:
+            img = parentes.get(lista[i])
+            if img and os.path.exists(img):
+                st.image(img, use_column_width=True)
+            else:
+                st.markdown(f"<div class='item-box'><h2 style='text-align:center;'>{lista[i][0]}</h2></div>", unsafe_allow_html=True)
 
-# Desenha o estado inicial
-desenhar_grade(st.session_state.grade)
+desenhar(st.session_state.grade)
 st.markdown('</div>', unsafe_allow_html=True)
 
-st.write("")
+# BOTÃO DE GIRO CENTRALIZADO
+_, btn_col, _ = st.columns()
+with btn_col:
+    if st.button("🔄"):
+        if st.session_state.moedas >= 50:
+            st.session_state.moedas -= 50
+            
+            # ANIMAÇÃO DE GIRO RÁPIDO
+            for _ in range(12):
+                temp = [random.choice(list(parentes.keys())) for _ in range(9)]
+                desenhar(temp)
+                time.sleep(0.06)
+            
+            # RESULTADO FINAL
+            st.session_state.grade = [random.choice(list(parentes.keys())) for _ in range(9)]
+            desenhar(st.session_state.grade)
+            
+            # Checar Prêmio (Linhas, Colunas ou Cruz)
+            res = st.session_state.grade
+            if len(set(res[3:6])) == 1: # Linha do meio
+                st.session_state.moedas += 500
+                st.balloons()
+            st.rerun()
 
-# BOTÃO GIRAR
-if st.button("🔥 SPIN TURBO 🔥"):
-    if st.session_state.moedas >= 100:
-        st.session_state.moedas -= 100
-        
-        # ANIMAÇÃO DE GIRO (TROCA RÁPIDA)
-        for _ in range(15): # Quantidade de trocas de imagem
-            temp_grade = [random.choice(list(parentes.keys())) for _ in range(9)]
-            desenhar_grade(temp_grade)
-            time.sleep(0.05) # Velocidade da troca (50 milissegundos)
-        
-        # RESULTADO FINAL
-        st.session_state.grade = [random.choice(list(parentes.keys())) for _ in range(9)]
-        desenhar_grade(st.session_state.grade)
-        
-        # LÓGICA DE GANHO (LINHA DO MEIO)
-        meio = st.session_state.grade[3:6]
-        if len(set(meio)) == 1:
-            st.session_state.moedas += 5000
-            st.balloons()
-            st.success("💰 JACKPOT! +$5000")
-        elif len(set(meio)) == 2:
-            st.session_state.moedas += 200
-            st.toast("Parzinho da sorte!", icon="✨")
-        
-        st.rerun()
-    else:
-        st.error("Sem moedas! Reinicie no menu lateral.")
+st.write("<p style='text-align:center; color:white;'>Entenda os prêmios | Nenhuma tentativa restante</p>", unsafe_allow_html=True)
 
 with st.sidebar:
-    if st.button("🔄 RESET"):
-        st.session_state.moedas = 5000
+    if st.button("RESET"):
+        st.session_state.moedas = 1000
         st.rerun()
