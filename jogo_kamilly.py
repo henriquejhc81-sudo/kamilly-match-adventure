@@ -5,78 +5,47 @@ import os
 import base64
 
 # --- 1. CONFIGURAÇÃO ---
-st.set_page_config(page_title="KAMILLY ARCADE 2x3", layout="centered", page_icon="🎰")
+st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🎰")
 
-# --- 2. BANCO DE DADOS (11 PERSONAGENS CONFERIDOS) ---
+# --- 2. BANCO DE DADOS (11 PERSONAGENS) ---
 familia = {
-    "kamilly": ["kamilly.jpg", "👑"],
-    "papai": ["papai.jpg", "🧔"],
-    "mamae": ["mamae.jpg", "👩‍🦰"],
-    "kauan": ["kauan.jpg", "🤙"],
-    "tio_michel": ["tio_michel.jpg", "👨‍💻"],
-    "tio_mk": ["tio_mk.jpg", "🍻"],
-    "tio_padrinho": ["tio_padrinho.jpg", "🤟"],
-    "vovo_diva": ["vovo_diva.jpg", "💎"],
-    "vovo_geraldo": ["vovo_geraldo.jpg", "🤠"],
-    "vovo_mario": ["vovo_mario.jpg", "👨‍🦳"],
+    "kamilly": ["kamilly.jpg", "👑"], "papai": ["papai.jpg", "🧔"],
+    "mamae": ["mamae.jpg", "👩‍🦰"], "kauan": ["kauan.jpg", "🤙"],
+    "tio_michel": ["tio_michel.jpg", "👨‍💻"], "tio_mk": ["tio_mk.jpg", "🍻"],
+    "tio_padrinho": ["tio_padrinho.jpg", "🤟"], "vovo_diva": ["vovo_diva.jpg", "💎"],
+    "vovo_geraldo": ["vovo_geraldo.jpg", "🤠"], "vovo_mario": ["vovo_mario.jpg", "👨‍🦳"],
     "vovo_neusa": ["vovo_neusa.jpg", "🌸"]
 }
 
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 3. CSS "NUCLEAR" (TRAVA O SCROLL E COLA IMAGENS) ---
+# --- 3. CSS CORRIGIDO (SEM EXIBIR TEXTO NA TELA) ---
 st.markdown("""
-    <div id="topo"></div>
     <style>
     .main { background-color: #050a1a; }
-    
-    /* TRAVA A TELA PARA NÃO SUBIR */
-    section.main { overflow: hidden !important; }
-
     .arcade-frame {
-        border: 8px solid #0055ff;
-        border-radius: 20px;
-        background: #0a2a7a;
-        padding: 0px; 
-        box-shadow: 0 0 30px #0055ff;
-        max-width: 320px;
-        margin: auto;
-        overflow: hidden;
-        line-height: 0;
+        border: 8px solid #0055ff; border-radius: 20px;
+        background: #0a2a7a; padding: 0px; margin: auto;
+        overflow: hidden; line-height: 0; max-width: 320px;
     }
-
     .grid-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-gap: 0px;
-        width: 100%;
+        display: grid; grid-template-columns: 1fr 1fr;
+        grid-gap: 0px; width: 100%;
     }
-
     .grid-container img {
-        width: 100%;
-        height: 150px;
-        object-fit: cover;
-        display: block;
-        border: 0.1px solid rgba(255,255,255,0.05);
+        width: 100%; height: 150px; object-fit: cover; display: block;
     }
-
     .slot-reserva {
-        height: 150px;
-        background: #0a2a7a;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 40px;
+        height: 150px; background: #0a2a7a; display: flex;
+        align-items: center; justify-content: center; font-size: 40px;
     }
-    
     .moedas-banner {
         background: linear-gradient(90deg, #00ff00, #008000);
         color: white; padding: 10px; border-radius: 50px;
         font-size: 28px; font-weight: bold; text-align: center;
-        box-shadow: 0 0 15px #00ff00; max-width: 260px; margin: 0 auto 15px auto;
+        max-width: 260px; margin: 0 auto 15px auto;
     }
-    
     .stButton>button {
         background: radial-gradient(circle, #666, #333) !important;
         color: white !important; font-size: 35px !important; 
@@ -87,19 +56,14 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. SISTEMA DE ÁUDIO E ANIMAÇÃO ---
+# --- 4. FUNÇÕES ---
 def tocar_audio(url):
-    st.components.v1.html(f"""
-        <audio autoplay>
-            <source src="{url}" type="audio/mp3">
-        </audio>
-    """, height=0)
+    st.components.v1.html(f"<audio autoplay><source src='{url}' type='audio/mp3'></audio>", height=0)
 
 def get_base64(file_path):
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
-            data = f.read()
-        return f"data:image/jpeg;base64,{base64.b64encode(data).decode()}"
+            return f"data:image/jpeg;base64,{base64.b64encode(f.read()).decode()}"
     return None
 
 # --- 5. INTERFACE ---
@@ -108,54 +72,39 @@ st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>",
 
 caixa_roleta = st.empty()
 
-def mostrar_roleta(lista_atual):
-    html_grid = '<div class="arcade-frame"><div class="grid-container">'
-    for nome in lista_atual:
+def mostrar_roleta(lista):
+    html = '<div class="arcade-frame"><div class="grid-container">'
+    for nome in lista:
         foto, emoji = familia.get(nome, ["", "💎"])
         b64 = get_base64(foto)
-        if b64:
-            html_grid += f'<img src="{b64}">'
-        else:
-            html_grid += f'<div class="slot-reserva">{emoji}</div>'
-    html_grid += '</div></div>'
-    caixa_roleta.markdown(html_grid, unsafe_allow_html=True)
+        if b64: html += f'<img src="{b64}">'
+        else: html += f'<div class="slot-reserva">{emoji}</div>'
+    html += '</div></div>'
+    caixa_roleta.markdown(html, unsafe_allow_html=True)
 
 mostrar_roleta(st.session_state.grade)
 
-# --- 6. LÓGICA DE GIRO ---
-st.write("")
+# --- 6. GIRO ---
 if st.button("↻"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        # Música de Giro (Som de arcade)
         tocar_audio("https://soundjay.com")
-        
         for _ in range(6):
-            grade_vibrando = [random.choice(list(familia.keys())) for _ in range(6)]
-            mostrar_roleta(grade_vibrando)
+            grade_temp = [random.choice(list(familia.keys())) for _ in range(6)]
+            mostrar_roleta(grade_temp)
             time.sleep(0.1)
         
-        # Sorteio Final
         if random.random() < 0.35:
             venc = random.choice(list(familia.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2500
             mostrar_roleta(st.session_state.grade)
-            
-            # Efeitos de Vitória
             st.balloons()
-            # Música Infantil de Vitória
             tocar_audio("https://soundjay.com")
-            st.success(f"🏆 PARABÉNS! +$2500")
         else:
             st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(6)]
             mostrar_roleta(st.session_state.grade)
-        
-        # Script JS para manter o foco no topo sem rolar para baixo
-        st.components.v1.html("<script>window.parent.document.getElementById('topo').scrollIntoView();</script>", height=0)
         st.rerun()
-    else:
-        st.error("Sem moedas!")
 
 if st.sidebar.button("🔄 RECARREGAR"):
     st.session_state.moedas = 1000
