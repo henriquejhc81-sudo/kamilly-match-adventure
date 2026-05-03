@@ -20,16 +20,23 @@ familia = {
 # --- 3. ESTADOS ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
-if 'som_ligado' not in st.session_state: st.session_state.som_ligado = True
 
-# --- 4. CSS PARA EXCELÊNCIA VISUAL ---
+# --- 4. CSS PARA EXCELÊNCIA VISUAL (SEM VÃO E BOTÃO INFANTIL) ---
 st.markdown("""
     <style>
+    /* REMOVE O VÃO SUPERIOR TOTALMENTE */
+    .block-container { padding-top: 0rem !important; margin-top: -50px !important; }
     .main { background-color: #050a1a; }
+    header {visibility: hidden;}
     
-    /* REMOVE VÃO PRETO NO TOPO */
-    .block-container { padding-top: 1rem !important; }
-    h1 { margin-top: -30px !important; color:#0055ff; text-align:center; font-size:24px; }
+    h1 { 
+        margin-top: 0px !important; 
+        padding-top: 0px !important;
+        color:#0055ff; 
+        text-align:center; 
+        font-size:26px; 
+        text-shadow: 2px 2px #000;
+    }
 
     .arcade-frame {
         border: 8px solid #0055ff; border-radius: 20px;
@@ -52,24 +59,44 @@ st.markdown("""
         background: linear-gradient(90deg, #00ff00, #008000);
         color: white; padding: 10px; border-radius: 50px;
         font-size: 28px; font-weight: bold; text-align: center;
-        max-width: 260px; margin: 0 auto 15px auto;
+        max-width: 260px; margin: 0 auto 10px auto;
         box-shadow: 0 0 15px #00ff00;
     }
-    /* BOTÃO DE GIRO CIRCULAR */
+
+    /* BOTÃO JOGAR INFANTIL DOURADO E PULSANTE */
     .stButton>button {
-        background: radial-gradient(circle, #666, #333) !important;
-        color: white !important; font-size: 35px !important; 
-        height: 85px !important; width: 85px !important;
-        border-radius: 50% !important; border: 4px solid #ccc !important;
-        margin: 10px auto !important; display: block !important;
+        background: linear-gradient(145deg, #ffdb00, #ff9000) !important;
+        color: white !important; 
+        font-size: 30px !important; 
+        font-weight: bold !important;
+        height: 80px !important; 
+        width: 100% !important;
+        max-width: 280px !important;
+        border-radius: 40px !important; 
+        border: 4px solid #fff !important;
+        box-shadow: 0 10px 20px rgba(255, 144, 0, 0.4) !important;
+        margin: 15px auto !important; 
+        display: block !important;
+        text-shadow: 1px 1px 2px #555;
+        transition: 0.3s;
+    }
+    .stButton>button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 15px 25px rgba(255, 144, 0, 0.6) !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. FUNÇÕES AUXILIARES ---
+# --- 5. FUNÇÕES AUXILIARES (ÁUDIO AUTOMÁTICO) ---
 def tocar_audio(url):
-    if st.session_state.som_ligado:
-        st.components.v1.html(f"<audio autoplay><source src='{url}' type='audio/mp3'></audio>", height=0)
+    # Componente HTML para forçar o autoplay
+    html_audio = f"""
+        <iframe src="{url}" allow="autoplay" style="display:none" id="iframeAudio"></iframe>
+        <audio autoplay style="display:none">
+            <source src="{url}" type="audio/mp3">
+        </audio>
+    """
+    st.components.v1.html(html_audio, height=0)
 
 def get_base64(file_path):
     if os.path.exists(file_path):
@@ -78,13 +105,6 @@ def get_base64(file_path):
     return None
 
 # --- 6. INTERFACE ---
-# Botão pequeno de som no topo lateral
-col_title, col_sound = st.columns([0.9, 0.1])
-with col_sound:
-    if st.button("🔊" if st.session_state.som_ligado else "🔈"):
-        st.session_state.som_ligado = not st.session_state.som_ligado
-        st.rerun()
-
 st.markdown("<h1>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
@@ -103,34 +123,35 @@ def mostrar_roleta(lista):
 mostrar_roleta(st.session_state.grade)
 
 # --- 7. LÓGICA DE GIRO ---
-if st.button("↻"):
+if st.button("SORTE! 🍀"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        tocar_audio("https://soundjay.com") # Som de giro
+        # Som de Giro Automático
+        tocar_audio("https://soundjay.com")
         
-        # Animação rápida de embaralhamento
+        # Animação rápida
         for _ in range(6):
             grade_temp = [random.choice(list(familia.keys())) for _ in range(6)]
             mostrar_roleta(grade_temp)
             time.sleep(0.1)
         
         # Resultado Final
-        if random.random() < 0.35: # Chance de prêmio
+        if random.random() < 0.35:
             venc = random.choice(list(familia.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2500
             mostrar_roleta(st.session_state.grade)
             
-            # EFEITOS ESPECIAIS DE VITÓRIA
+            # EFEITOS DE VITÓRIA
             st.balloons()
-            tocar_audio("https://soundjay.com") # Aplausos
-            st.success(f"🏆 PARABÉNS! VOCÊ GANHOU COM {venc.upper()}!")
+            tocar_audio("https://soundjay.com")
+            st.success(f"🏆 VOCÊ GANHOU COM {venc.upper()}!")
         else:
             st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(6)]
             mostrar_roleta(st.session_state.grade)
         st.rerun()
     else:
-        st.error("Sem moedas!")
+        st.error("Ops! Suas moedas acabaram.")
 
 # Rodapé de recarga
 if st.sidebar.button("🔄 RECARREGAR MOEDAS"):
