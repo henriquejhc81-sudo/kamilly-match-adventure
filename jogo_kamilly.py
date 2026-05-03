@@ -13,10 +13,11 @@ familia_config = {
     "mamae": ["mamae.jpg", "👩‍🦰"], "papai": ["papai.jpg", "🧔"],
     "tio_michel": ["tio_michel.jpg", "👨‍💻"], "tio_mk": ["tio_mk.jpg", "🍻"],
     "tio_padrinho": ["tio_padrinho.jpg", "🤟"], "vovo_diva": ["vovo_diva.jpg", "💎"],
-    "vovo_geraldo": ["vovo_geraldo.jpg", "🤠"], "vovo_mario": ["vovo_mario.jpg", "👨‍🦳"]
+    "vovo_geraldo": ["vovo_geraldo.jpg", "🤠"], "vovo_mario": ["vovo_mario.jpg", "👨‍🦳"],
+    "vovo_neusa": ["vovo_neusa.jpg", "🌸"] # Adicionada conforme lista anterior
 }
 
-# --- 3. CACHE DE IMAGENS (EVITA TRAVAMENTO) ---
+# --- 3. CACHE DE IMAGENS (ALTA VELOCIDADE) ---
 @st.cache_data
 def carregar_assets_base64():
     assets_b64 = {}
@@ -34,66 +35,88 @@ assets_ready = carregar_assets_base64()
 
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
+if 'vitoria' not in st.session_state: st.session_state.vitoria = False
 
-# --- 4. CSS: AJUSTE DE VELOCIDADE E COR ROSA ---
-st.markdown("""
+# --- 4. CSS PROFISSIONAL (DESIGN DE CASSINO) ---
+st.markdown(f"""
     <style>
-    .block-container { padding-top: 0rem !important; margin-top: -80px !important; }
-    .main { background-color: #050a1a; }
-    header {visibility: hidden;}
+    .block-container {{ padding-top: 0rem !important; margin-top: -60px !important; }}
+    .main {{ background-color: #050a1a; }}
+    header {{visibility: hidden;}}
     
-    .kamilly-header { 
+    /* TÍTULO ESTILIZADO */
+    .kamilly-header {{ 
         color: #FF69B4; 
         text-align: center; 
         font-size: 60px; 
         font-family: 'Comic Sans MS', cursive;
-        text-shadow: 0 0 15px #FF69B4, 2px 2px #fff;
+        text-shadow: 0 0 20px #FF69B4, 2px 2px #fff;
         margin-bottom: 0px;
-    }
+    }}
 
-    .arcade-frame {
-        border: 10px solid #FF69B4; border-radius: 30px;
-        background: #000; padding: 0px; margin: auto;
-        overflow: hidden; max-width: 320px;
-        box-shadow: 0 0 40px #FF69B4;
-    }
+    /* MOLDURA DINÂMICA (MUDA NA VITÓRIA) */
+    .arcade-frame {{
+        border: 8px solid {"#FF69B4" if st.session_state.vitoria else "#0055ff"};
+        border-radius: 25px;
+        background: #000;
+        padding: 0px;
+        margin: auto;
+        overflow: hidden;
+        max-width: 320px;
+        line-height: 0;
+        box-shadow: 0 0 {"50px #FF69B4" if st.session_state.vitoria else "30px #0055ff"};
+        transition: all 0.3s ease;
+    }}
 
-    .grid-container {
-        display: grid; grid-template-columns: 1fr 1fr;
-        grid-gap: 0px; width: 100%;
-    }
+    .grid-container {{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-gap: 0px;
+        width: 100%;
+    }}
 
-    /* ANIMAÇÃO DE ROLAGEM VERTICAL RÁPIDA */
-    .reel-spin {
-        animation: slideVertical 0.08s infinite linear;
-    }
+    /* EFEITO DE ROLAGEM DE CASSINO */
+    .reel-spin img {{
+        animation: slideVertical 0.05s infinite linear;
+        filter: blur(1px);
+    }}
 
-    @keyframes slideVertical {
-        0% { transform: translateY(-10px); }
-        100% { transform: translateY(10px); }
-    }
+    @keyframes slideVertical {{
+        0% {{ transform: translateY(-5px); }}
+        100% {{ transform: translateY(5px); }}
+    }}
 
-    .grid-container img {
-        width: 100%; height: 160px; object-fit: cover; display: block;
-        transition: all 0.05s ease-in-out;
-    }
+    .grid-container img {{
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }}
 
-    .moedas-banner {
+    .moedas-banner {{
         background: linear-gradient(90deg, #FFB6C1, #FF69B4);
         color: white; padding: 10px; border-radius: 50px;
         font-size: 28px; font-weight: bold; text-align: center;
         max-width: 240px; margin: 10px auto;
         box-shadow: 0 0 20px #FF69B4;
-    }
+    }}
 
-    .stButton>button {
-        background: linear-gradient(145deg, #FF69B4, #FF1493) !important;
-        color: white !important; font-size: 28px !important; font-weight: bold !important;
-        height: 75px !important; width: 100% !important; max-width: 280px !important;
-        border-radius: 50px !important; border: 4px solid #fff !important;
-        box-shadow: 0 8px 15px rgba(255, 20, 147, 0.4) !important;
-        margin: 10px auto !important; display: block !important;
-    }
+    /* BOTÃO VAMOS BRINCAR (ROSA CLEAN) */
+    .stButton>button {{
+        background: linear-gradient(145deg, #FFB6C1, #FF69B4) !important;
+        color: white !important;
+        font-size: 28px !important;
+        font-weight: bold !important;
+        height: 75px !important;
+        width: 100% !important;
+        max-width: 280px !important;
+        border-radius: 50px !important;
+        border: 4px solid #fff !important;
+        box-shadow: 0 8px 15px rgba(255, 105, 180, 0.4) !important;
+        margin: 10px auto !important;
+        display: block !important;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -119,33 +142,41 @@ def mostrar_roleta(lista, girando=False):
     for nome in lista:
         b64 = assets_ready.get(nome)
         if b64:
-            html += f'<img src="{b64}">'
+            # Se for vitória, adiciona um brilho extra na imagem
+            style = "filter: brightness(1.2) contrast(1.1);" if st.session_state.vitoria else ""
+            html += f'<img src="{b64}" style="{style}">'
         else:
-            emoji = familia_config[nome][1]
+            emoji = familia_config.get(nome, ["", "💎"])[1]
             html += f'<div style="height:160px; background:#111; display:flex; align-items:center; justify-content:center; font-size:50px;">{emoji}</div>'
     html += '</div></div>'
     caixa_roleta.markdown(html, unsafe_allow_html=True)
 
+# Mostrar estado atual
 mostrar_roleta(st.session_state.grade)
 
-# --- 7. LÓGICA DE GIRO (SEM TRAVAMENTO) ---
+# --- 7. LÓGICA DE GIRO (ESTILO VIDEO SLOT) ---
 if st.button("VAMOS BRINCAR"):
+    st.session_state.vitoria = False # Reset status de vitória
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
         trigger_audio('spin')
         
-        # ANIMAÇÃO: Troca rápida de nomes (usando cache b64)
-        for _ in range(12):
-            # Sorteia nomes aleatórios para o efeito de giro
+        # Animação de Giro (Desaceleração progressiva)
+        ciclos = 15
+        for i in range(ciclos):
             grade_temp = random.choices(list(familia_config.keys()), k=6)
             mostrar_roleta(grade_temp, girando=True)
-            time.sleep(0.06) # Tempo ideal para o navegador processar
+            # Aumenta o delay levemente no final para efeito de parada mecânica
+            delay = 0.03 + (i/ciclos)*0.05 
+            time.sleep(delay)
         
-        # RNG: Resultado Final
-        if random.random() < 0.35:
+        # RNG (Cálculo do prêmio)
+        sorteio = random.random()
+        if sorteio < 0.35: # 35% de chance
             venc = random.choice(list(familia_config.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2500
+            st.session_state.vitoria = True
             mostrar_roleta(st.session_state.grade, girando=False)
             st.balloons()
             trigger_audio('win')
@@ -159,4 +190,5 @@ if st.button("VAMOS BRINCAR"):
 
 if st.sidebar.button("🔄 RECARREGAR"):
     st.session_state.moedas = 1000
+    st.session_state.vitoria = False
     st.rerun()
