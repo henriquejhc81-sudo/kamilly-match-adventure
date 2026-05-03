@@ -3,7 +3,6 @@ import random
 import time
 import os
 import base64
-
 # --- 1. CONFIGURAÇÃO ---
 st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🎰")
 
