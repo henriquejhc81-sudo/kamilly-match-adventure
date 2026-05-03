@@ -2,114 +2,125 @@ import streamlit as st
 import random
 import time
 
-# --- 1. CONFIGURAÇÃO DE ALTA PERFORMANCE ---
+# --- 1. CONFIGURAÇÃO PROFISSIONAL ---
 st.set_page_config(page_title="KAMILLY ARCADE PRO", layout="centered", page_icon="🎰")
 
-# Cache para carregar o banco de dados sem pesar no processador do celular
-@st.cache_data
-def get_familia():
-    return {
-        "Kamilly": ["kamilly.jpg", "👑"], "Papai Rick": ["papai.jpg", "🧔"], 
-        "Mamãe": ["mamae.jpg", "👩‍🦰"], "Kauan": ["kauan.jpg", "🤙"], 
-        "Vovô G": ["vovo_geraldo.jpg", "🤠"], "Vovô M": ["vovo_mario.jpg", "👨‍🦳"], 
-        "Tio MK": ["tio_mk.jpg", "🍻"], "Vovó N": ["vovo_neusa.jpg", "🌸"], 
-        "Padrinho": ["tio_padrinho.jpg", "🤟"], "Tio Michel": ["tio_michel.jpg", "👨‍💻"], 
-        "Vovó Diva": ["vova_diva.jpg", "💎"]
+# --- 2. BANCO DE DADOS (Substitua pelos seus links reais do GitHub) ---
+# DICA: Use o link "Raw" do seu GitHub para as imagens aparecerem 100%
+USUARIO = "SEU_USER_GITHUB"
+REPO = "SEU_REPO"
+URL_BASE = f"https://githubusercontent.com{USUARIO}/{REPO}/main/"
+
+familia = {
+    "Kamilly": [f"{URL_BASE}kamilly.jpg", "👑"],
+    "Papai Rick": [f"{URL_BASE}papai.jpg", "🧔"],
+    "Mamãe": [f"{URL_BASE}mamae.jpg", "👩‍🦰"],
+    "Kauan": [f"{URL_BASE}kauan.jpg", "🤙"],
+    "Vovô G": [f"{URL_BASE}vovo_geraldo.jpg", "🤠"],
+    "Vovô M": [f"{URL_BASE}vovo_mario.jpg", "👨‍🦳"],
+    "Tio MK": [f"{URL_BASE}tio_mk.jpg", "🍻"],
+    "Vovó N": [f"{URL_BASE}vovo_neusa.jpg", "🌸"],
+    "Padrinho": [f"{URL_BASE}tio_padrinho.jpg", "🤟"],
+    "Tio Michel": [f"{URL_BASE}tio_michel.jpg", "👨‍💻"],
+    "Vovó Diva": [f"{URL_BASE}vova_diva.jpg", "💎"]
+}
+
+# --- 3. SISTEMA DE SONS E EFEITOS (HTML/JS) ---
+def tocar_som(tipo):
+    # Sons públicos para teste (Substitua pelos seus arquivos .mp3 no GitHub se preferir)
+    sons = {
+        "giro": "https://soundjay.com",
+        "ganhou": "https://soundjay.com",
+        "clique": "https://soundjay.com"
     }
+    st.components.v1.html(f"""
+        <audio autoplay><source src="{sons[tipo]}" type="audio/mp3"></audio>
+    """, height=0)
 
-familia = get_familia()
-
-# --- 2. ESTADOS DO JOGO ---
-if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-if 'grade' not in st.session_state: st.session_state.grade = ["Kamilly"] * 9
-
-# --- 3. CSS MOBILE-FIRST (ANDROID OPTIMIZED) ---
-st.markdown("""
+# --- 4. ESTILIZAÇÃO CSS (INTERFACE GAMER) ---
+st.markdown(f"""
     <style>
-    .main { background: #000b1e; color: white; }
-    .slot-frame {
-        border: 5px solid #ffd700; border-radius: 15px;
-        background: rgba(0, 0, 0, 0.95); padding: 5px;
-        box-shadow: 0 0 20px #ffd700; max-width: 320px; margin: auto;
-    }
-    /* GANTE QUE AS COLUNAS NÃO QUEBREM NO ANDROID */
-    [data-testid="column"] {
-        width: 32% !important; flex: 1 1 32% !important; min-width: 32% !important;
-    }
-    [data-testid="stHorizontalBlock"] {
-        display: flex !important; flex-direction: row !important;
-        flex-wrap: nowrap !important; gap: 3px !important;
-    }
-    .slot-box {
-        height: 85px; width: 100%; background: #111; border-radius: 8px; 
-        display: flex; flex-direction: column; align-items: center; 
-        justify-content: center; border: 1px solid gold; overflow: hidden;
-    }
-    img { height: 85px !important; width: 100% !important; object-fit: cover; }
-    .stButton>button {
-        background: linear-gradient(180deg, #ffd700 0%, #b8860b 100%) !important;
-        color: black !important; border-radius: 30px !important;
-        font-weight: 900 !important; height: 60px !important;
-        font-size: 20px !important; border: none !important;
-    }
-    .moedas-display { color: #00ff00; font-size: 35px; font-weight: bold; text-align: center; text-shadow: 0 0 10px #00ff00; }
+    .main {{ background: #050a1a; color: white; }}
+    .slot-container {{
+        background: linear-gradient(145deg, #1a1a1a, #000);
+        border: 8px solid #ffd700; border-radius: 25px;
+        padding: 10px; box-shadow: 0 0 50px #ffd700;
+        max-width: 350px; margin: auto;
+    }}
+    .moedas-badge {{
+        background: #00ff00; color: black; padding: 10px 20px;
+        border-radius: 50px; font-size: 28px; font-weight: bold;
+        text-align: center; margin-bottom: 20px; box-shadow: 0 0 20px #00ff00;
+    }}
+    div[data-testid="column"] {{ width: 32% !important; flex: 1 1 32% !important; min-width: 32% !important; }}
+    div[data-testid="stHorizontalBlock"] {{ display: flex !important; flex-direction: row !important; gap: 5px !important; }}
+    img {{ border-radius: 15px; border: 3px solid #ffd700; height: 90px !important; width: 100% !important; object-fit: cover; }}
+    .stButton>button {{
+        background: linear-gradient(to bottom, #ff4b4b, #8b0000) !important;
+        color: white !important; font-size: 24px !important; height: 70px !important;
+        border-radius: 20px !important; border: 2px solid white !important;
+        box-shadow: 0 10px 0 #5a0000 !important;
+    }}
+    .stButton>button:active {{ transform: translateY(5px); box-shadow: 0 5px 0 #5a0000 !important; }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. INTERFACE PRINCIPAL ---
-st.markdown(f"<p class='moedas-display'>💰 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
+# --- 5. LOGICA DE ESTADO ---
+if 'moedas' not in st.session_state: st.session_state.moedas = 1000
+if 'grade' not in st.session_state: st.session_state.grade = random.sample(list(familia.keys()), 9)
 
-# Container vazio para animação (Isso evita que a página toda pisque)
-jogo_container = st.empty()
+# --- 6. INTERFACE ---
+st.markdown("<h1 style='text-align:center; color:gold;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
+st.markdown(f"<div class='moedas-badge'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
-def renderizar_grade(grade_atual):
-    with jogo_container.container():
-        st.markdown('<div class="slot-frame">', unsafe_allow_html=True)
+tabuleiro = st.empty()
+
+def mostrar_grade(lista_nomes):
+    with tabuleiro.container():
+        st.markdown('<div class="slot-container">', unsafe_allow_html=True)
         for r in range(3):
             cols = st.columns(3)
             for c in range(3):
                 idx = r * 3 + c
-                nome_p = grade_atual[idx]
-                dados = familia.get(nome_p, ["", "❓"])
-                
-                # Tenta carregar imagem, senão emoji
-                try:
-                    cols[c].image(dados, use_container_width=True)
-                except:
-                    cols[c].markdown(f"<div class='slot-box'><span style='font-size:30px;'>{dados[1]}</span></div>", unsafe_allow_html=True)
+                nome = lista_nomes[idx]
+                img_url, emoji = familia[nome]
+                # Fallback: Se o link da imagem falhar, mostra o emoji bonito
+                cols[c].image(img_url, caption=None, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# Renderiza a grade inicial
-renderizar_grade(st.session_state.grade)
+mostrar_grade(st.session_state.grade)
 
-# --- 5. LÓGICA DO GIRO ---
-st.write("")
-if st.button("🎰 GIRAR E GANHAR ($50) 🎰"):
+# --- 7. BOTÃO COM LÓGICA DE ANIMAÇÃO (ESTILO UNITY) ---
+if st.button("🔥 GIRAR ROLETA 🔥"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
+        tocar_som("giro")
         
-        # Efeito de "Giro" rápido (Animação fake para UX)
-        for _ in range(3):
-            random_grade = [random.choice(list(familia.keys())) for _ in range(9)]
-            renderizar_grade(random_grade)
-            time.sleep(0.1)
+        # ANIMAÇÃO DE GIRO (Loop Aleatório)
+        for i in range(8): # Quantidade de giros rápidos
+            giro_random = [random.choice(list(familia.keys())) for _ in range(9)]
+            mostrar_grade(giro_random)
+            time.sleep(0.1) # Velocidade do giro
         
-        # Resultado Final
-        if random.random() < 0.35: # 35% de chance
-            venc = random.choice(list(familia.keys()))
-            st.session_state.grade = [venc] * 9
+        # SORTEIO FINAL (Lógica de Prêmio)
+        sorte = random.random()
+        if sorte < 0.30: # 30% de chance de vitória
+            vencedor = random.choice(list(familia.keys()))
+            st.session_state.grade = [vencedor] * 9
             st.session_state.moedas += 3000
-            renderizar_grade(st.session_state.grade)
+            mostrar_grade(st.session_state.grade)
+            tocar_som("ganhou")
             st.balloons()
-            st.success("🎉 JACKPOT FAMÍLIA! +$3000")
+            st.snow()
+            st.success(f"🏆 PARABÉNS! VOCÊ GANHOU COM {vencedor.upper()}!")
         else:
             st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
-            renderizar_grade(st.session_state.grade)
-            
+            mostrar_grade(st.session_state.grade)
+        
         st.rerun()
     else:
-        st.error("Recarregue suas moedas!")
+        st.error("❌ Moedas insuficientes!")
 
-if st.button("🔄 RECARREGAR SALDO"):
+if st.sidebar.button("🔄 Recarregar Moedas"):
     st.session_state.moedas = 1000
     st.rerun()
