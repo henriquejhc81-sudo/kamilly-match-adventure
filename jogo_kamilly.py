@@ -6,7 +6,7 @@ import os
 # --- 1. CONFIGURAÇÃO ---
 st.set_page_config(page_title="KAMILLY ARCADE 2x3", layout="centered", page_icon="🎰")
 
-# --- 2. BANCO DE DADOS COMPLETO (11 PERSONAGENS CORRIGIDOS) ---
+# --- 2. BANCO DE DADOS COMPLETO (11 PERSONAGENS) ---
 familia = {
     "kamilly": ["kamilly.jpg", "👑"],
     "papai": ["papai.jpg", "🧔"],
@@ -23,21 +23,23 @@ familia = {
 
 # --- 3. ESTADOS ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-# Agora a grade tem 6 posições para o formato 2x3
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 4. CSS PARA CELULAR (FORÇA 2 COLUNAS LADO A LADO) ---
+# --- 4. CSS PARA CELULAR (CORREÇÃO DE ALINHAMENTO E ESPAÇO) ---
 st.markdown("""
     <style>
     .main { background-color: #050a1a; }
     
-    /* FORÇA 2 COLUNAS NO MOBILE */
+    /* FORÇA AS DUAS COLUNAS A FICAREM JUNTAS NO CENTRO */
     div[data-testid="column"] {
         width: 48% !important;
         flex: 1 1 48% !important;
-        min-width: 48% !important;
+        min-width: 45% !important;
+        padding: 0px !important;
+        margin: 0px !important;
     }
     
+    /* REMOVE O ESPAÇO VAZIO DO LADO ESQUERDO/DIREITO */
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
@@ -47,13 +49,14 @@ st.markdown("""
     }
 
     .arcade-frame {
-        border: 6px solid #ffd700; border-radius: 15px;
-        background: #000; padding: 5px; box-shadow: 0 0 20px #ffd700;
-        max-width: 340px; margin: auto;
+        border: 6px solid #ffd700; border-radius: 20px;
+        background: rgba(0,0,0,0.7); padding: 10px; 
+        box-shadow: 0 0 25px #ffd700;
+        max-width: 330px; margin: auto;
     }
 
     img { 
-        border-radius: 12px; border: 2px solid gold; 
+        border-radius: 12px; border: 3px solid gold; 
         height: 150px !important; width: 100% !important; object-fit: cover; 
     }
     
@@ -64,9 +67,9 @@ st.markdown("""
     
     .moedas-banner {
         background: linear-gradient(90deg, #00ff00, #008000);
-        color: white; padding: 10px; border-radius: 50px;
+        color: white; padding: 12px; border-radius: 50px;
         font-size: 28px; font-weight: bold; text-align: center;
-        box-shadow: 0 0 15px #00ff00; margin-bottom: 15px;
+        box-shadow: 0 0 20px #00ff00; max-width: 280px; margin: 0 auto 15px auto;
     }
     
     .stButton>button {
@@ -74,7 +77,7 @@ st.markdown("""
         color: white !important; font-size: 22px !important; height: 60px !important;
         border-radius: 15px !important; border: 2px solid gold !important;
         box-shadow: 0 5px 0 #5a0000 !important; font-weight: bold !important;
-        width: 100% !important;
+        width: 100% !important; margin-top: 10px !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -96,13 +99,13 @@ caixa_roleta = st.empty()
 def mostrar_roleta(lista_atual):
     with caixa_roleta.container():
         st.markdown('<div class="arcade-frame">', unsafe_allow_html=True)
-        # 3 linhas de 2 colunas
+        # 3 linhas de 2 colunas (2x3)
         for r in range(3):
             cols = st.columns(2)
             for c in range(2):
                 idx = r * 2 + c
                 nome_p = lista_atual[idx]
-                # Busca segura para evitar o KeyError
+                # Busca segura no dicionário
                 foto, emoji = familia.get(nome_p, ["", "💎"])
                 
                 if os.path.exists(foto):
@@ -127,7 +130,7 @@ if st.button("🔥 GIRAR ROLETA ($50) 🔥"):
             time.sleep(0.1)
         
         # RESULTADO FINAL
-        if random.random() < 0.35: # 35% de chance de ganhar
+        if random.random() < 0.35: # 35% de chance de vitória
             venc = random.choice(list(familia.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2500
