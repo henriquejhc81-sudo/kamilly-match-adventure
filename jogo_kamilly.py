@@ -4,9 +4,9 @@ import time
 import os
 
 # --- 1. CONFIGURAÇÃO ---
-st.set_page_config(page_title="KAMILLY ARCADE 2x3", layout="centered", page_icon="🎰")
+st.set_page_config(page_title="KAMILLY ARCADE 3x3", layout="centered", page_icon="🎰")
 
-# --- 2. BANCO DE DADOS COMPLETO (11 PERSONAGENS) ---
+# --- 2. BANCO DE DADOS COMPLETO ---
 familia = {
     "kamilly": ["kamilly.jpg", "👑"],
     "papai": ["papai.jpg", "🧔"],
@@ -23,61 +23,65 @@ familia = {
 
 # --- 3. ESTADOS ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
+if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 9
 
-# --- 4. CSS PARA CELULAR (CORREÇÃO DE ALINHAMENTO E ESPAÇO) ---
+# --- 4. CSS PARA FORMATO 3x3 COLADO (IGUAL À FOTO) ---
 st.markdown("""
     <style>
     .main { background-color: #050a1a; }
     
-    /* FORÇA AS DUAS COLUNAS A FICAREM JUNTAS NO CENTRO */
+    /* FORÇA 3 COLUNAS LADO A LADO SEM ESPAÇO (GAP ZERO) */
     div[data-testid="column"] {
-        width: 48% !important;
-        flex: 1 1 48% !important;
-        min-width: 45% !important;
+        width: 33.33% !important;
+        flex: 1 1 33.33% !important;
+        min-width: 33.33% !important;
         padding: 0px !important;
         margin: 0px !important;
     }
     
-    /* REMOVE O ESPAÇO VAZIO DO LADO ESQUERDO/DIREITO */
+    /* REMOVE O ESPAÇAMENTO PADRÃO DO STREAMLIT */
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
-        flex-wrap: nowrap !important;
+        gap: 0px !important; /* IGUAL À FOTO: COLADO */
         justify-content: center !important;
-        gap: 8px !important;
     }
 
     .arcade-frame {
-        border: 6px solid #ffd700; border-radius: 20px;
-        background: rgba(0,0,0,0.7); padding: 10px; 
-        box-shadow: 0 0 25px #ffd700;
-        max-width: 330px; margin: auto;
+        border: 10px solid #0055ff; /* Azul igual à foto */
+        border-radius: 25px;
+        background: #0a2a7a;
+        padding: 0px; 
+        box-shadow: 0 0 40px #0055ff;
+        max-width: 350px; 
+        margin: auto;
+        overflow: hidden;
     }
 
     img { 
-        border-radius: 12px; border: 3px solid gold; 
-        height: 150px !important; width: 100% !important; object-fit: cover; 
+        border: 1px solid rgba(255, 215, 0, 0.3); /* Linha fina entre slots */
+        height: 110px !important; 
+        width: 100% !important; 
+        object-fit: cover; 
     }
     
     .slot-reserva {
-        height: 150px; background: #222; border-radius: 12px; border: 2px solid gold;
+        height: 110px; background: #0a2a7a; border: 1px solid rgba(255, 215, 0, 0.3);
         display: flex; align-items: center; justify-content: center; font-size: 40px;
     }
     
     .moedas-banner {
         background: linear-gradient(90deg, #00ff00, #008000);
         color: white; padding: 12px; border-radius: 50px;
-        font-size: 28px; font-weight: bold; text-align: center;
-        box-shadow: 0 0 20px #00ff00; max-width: 280px; margin: 0 auto 15px auto;
+        font-size: 32px; font-weight: bold; text-align: center;
+        box-shadow: 0 0 20px #00ff00; max-width: 300px; margin: 0 auto 20px auto;
     }
     
     .stButton>button {
-        background: linear-gradient(to bottom, #ff4b4b, #8b0000) !important;
-        color: white !important; font-size: 22px !important; height: 60px !important;
-        border-radius: 15px !important; border: 2px solid gold !important;
-        box-shadow: 0 5px 0 #5a0000 !important; font-weight: bold !important;
-        width: 100% !important; margin-top: 10px !important;
+        background: radial-gradient(circle, #666, #333) !important; /* Botão cinza igual à foto */
+        color: white !important; font-size: 25px !important; height: 70px !important; width: 70px !important;
+        border-radius: 50% !important; border: 4px solid #ccc !important;
+        margin: 20px auto !important; display: block !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -91,7 +95,7 @@ def tocar_som(tipo):
     st.components.v1.html(f"<audio autoplay><source src='{sons[tipo]}' type='audio/mp3'></audio>", height=0)
 
 # --- 6. INTERFACE ---
-st.markdown("<h1 style='text-align:center; color:gold; font-size:24px;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; color:#0055ff; font-size:28px;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
 caixa_roleta = st.empty()
@@ -99,13 +103,12 @@ caixa_roleta = st.empty()
 def mostrar_roleta(lista_atual):
     with caixa_roleta.container():
         st.markdown('<div class="arcade-frame">', unsafe_allow_html=True)
-        # 3 linhas de 2 colunas (2x3)
+        # 3 linhas de 3 colunas (3x3 igual à foto)
         for r in range(3):
-            cols = st.columns(2)
-            for c in range(2):
-                idx = r * 2 + c
+            cols = st.columns(3)
+            for c in range(3):
+                idx = r * 3 + c
                 nome_p = lista_atual[idx]
-                # Busca segura no dicionário
                 foto, emoji = familia.get(nome_p, ["", "💎"])
                 
                 if os.path.exists(foto):
@@ -116,30 +119,29 @@ def mostrar_roleta(lista_atual):
 
 mostrar_roleta(st.session_state.grade)
 
-# --- 7. BOTÃO DE GIRO ---
+# --- 7. BOTÃO DE GIRO (ESTILO BOTÃO CINZA DA FOTO) ---
 st.write("")
-if st.button("🔥 GIRAR ROLETA ($50) 🔥"):
+if st.button("↻"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
         tocar_som("giro")
         
-        # ANIMAÇÃO DE GIRO
+        # ANIMAÇÃO
         for _ in range(6):
-            grade_vibrando = [random.choice(list(familia.keys())) for _ in range(6)]
+            grade_vibrando = [random.choice(list(familia.keys())) for _ in range(9)]
             mostrar_roleta(grade_vibrando)
             time.sleep(0.1)
         
-        # RESULTADO FINAL
-        if random.random() < 0.35: # 35% de chance de vitória
+        # RESULTADO
+        if random.random() < 0.35:
             venc = random.choice(list(familia.keys()))
-            st.session_state.grade = [venc] * 6
-            st.session_state.moedas += 2500
+            st.session_state.grade = [venc] * 9
+            st.session_state.moedas += 3000
             mostrar_roleta(st.session_state.grade)
             st.balloons()
             tocar_som("ganhou")
-            st.success(f"🏆 JACKPOT! +$2500")
         else:
-            st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(6)]
+            st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
             mostrar_roleta(st.session_state.grade)
         
         st.rerun()
