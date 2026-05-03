@@ -19,23 +19,23 @@ familia = {
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 3. CSS "TRAVA MOBILE" (FORÇA LADO A LADO E JUNTA TUDO) ---
+# --- 3. CSS "BLINDADO" (FORÇA GRID 2 COLUNAS NO MOBILE) ---
 st.markdown("""
     <style>
     .main { background-color: #050a1a; }
     
-    /* 1. FORÇA O CONTAINER A NÃO QUEBRAR A LINHA NO CELULAR */
-    div[data-testid="stHorizontalBlock"] {
+    /* ALVO: O container interno de todas as colunas do Streamlit */
+    [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
-        flex-wrap: nowrap !important; /* Proíbe empilhar uma embaixo da outra */
-        gap: 0px !important;         /* Junta as colunas no centro */
+        flex-wrap: nowrap !important;
+        gap: 0px !important;
         justify-content: center !important;
-        align-items: center !important;
+        padding: 0px !important;
     }
 
-    /* 2. DEFINE LARGURA FIXA PARA AS DUAS COLUNAS */
-    div[data-testid="column"] {
+    /* ALVO: Cada coluna individual, forçando largura de 50% */
+    [data-testid="column"] {
         width: 50% !important;
         flex: 1 1 50% !important;
         min-width: 50% !important;
@@ -43,9 +43,9 @@ st.markdown("""
         margin: 0px !important;
     }
 
-    /* 3. MOLDURA E IMAGENS */
+    /* MOLDURA AZUL E IMAGENS COLADAS */
     .arcade-frame {
-        border: 8px solid #0055ff;
+        border: 10px solid #0055ff;
         border-radius: 20px;
         background: #0a2a7a;
         padding: 0px; 
@@ -61,6 +61,7 @@ st.markdown("""
         height: 160px !important; 
         width: 100% !important; 
         object-fit: cover; 
+        border: 0.1px solid rgba(255, 255, 255, 0.1); /* Linha quase invisível */
     }
     
     .slot-reserva {
@@ -68,26 +69,21 @@ st.markdown("""
         display: flex; align-items: center; justify-content: center; font-size: 40px;
     }
     
-    .moedas-banner {
-        background: linear-gradient(90deg, #00ff00, #008000);
-        color: white; padding: 10px; border-radius: 50px;
-        font-size: 28px; font-weight: bold; text-align: center;
-        box-shadow: 0 0 15px #00ff00; max-width: 260px; margin: 0 auto 15px auto;
-    }
-    
+    /* BOTÃO CIRCULAR ESTILO CASSINO */
     .stButton>button {
         background: radial-gradient(circle, #666, #333) !important;
         color: white !important; font-size: 35px !important; 
-        height: 80px !important; width: 80px !important;
-        border-radius: 50% !important; border: 4px solid #ccc !important;
+        height: 85px !important; width: 85px !important;
+        border-radius: 50% !important; border: 5px solid #ccc !important;
         margin: 20px auto !important; display: block !important;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.5) !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 4. INTERFACE ---
 st.markdown("<h1 style='text-align:center; color:#0055ff; font-size:24px;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
-st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
+st.markdown(f"<div style='background:linear-gradient(90deg, #00ff00, #008000); color:white; padding:10px; border-radius:50px; font-size:28px; font-weight:bold; text-align:center; max-width:260px; margin:0 auto 15px auto;'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
 caixa_roleta = st.empty()
 
