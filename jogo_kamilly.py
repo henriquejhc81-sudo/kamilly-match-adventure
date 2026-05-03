@@ -1,96 +1,100 @@
 import streamlit as st
 import random
 import os
+import time
 
-# --- 1. CONFIGURAÇÃO ---
-st.set_page_config(page_title="KAMILLY ARCADE", layout="centered")
+# --- 1. CONFIGURAÇÃO DE TELA CHEIA ---
+st.set_page_config(page_title="KAMILLY LUCKY SLOT", layout="centered", page_icon="🎰")
 
 st.markdown("""
     <style>
     .main { background: #000b1e; }
-    .console { border: 5px solid #ffd700; border-radius: 20px; background: #000; padding: 10px; }
-    h1 { color: #ffd700; text-align: center; font-family: 'Courier New'; }
-    .moedas { color: #00ff00; font-size: 30px; text-align: center; font-weight: bold; }
+    .console-box {
+        border: 8px solid #ffd700; border-radius: 30px;
+        background: rgba(0, 0, 0, 0.9); padding: 25px;
+        box-shadow: 0 0 50px #ffd700; text-align: center;
+        max-width: 500px; margin: auto;
+    }
+    img { 
+        border-radius: 20px; border: 3px solid #ffd700; 
+        height: 130px !important; width: 130px !important; object-fit: cover; 
+    }
+    .stButton>button {
+        background: radial-gradient(circle, #ffd700, #b8860b) !important;
+        color: black !important; border-radius: 50px !important;
+        font-weight: bold !important; height: 70px !important; width: 100% !important;
+        font-size: 25px !important; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        border: 2px solid white !important;
+    }
+    .moedas { color: #00ff00; font-size: 45px; font-weight: bold; text-align: center; text-shadow: 2px 2px #000; }
+    h1 { color: #ffd700; text-align: center; font-size: 35px; text-shadow: 0 0 15px #ffd700; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. ESTADOS ---
-if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-if 'jogo' not in st.session_state: st.session_state.jogo = "🐍 COBRINHA"
+# --- 2. DATABASE FAMÍLIA ---
+familia = {
+    "Papai": "papai.jpg", "Kamilly": "kamilly.jpg", "Mamãe": "mamae.jpg",
+    "Kauan": "kauan.jpg", "Vovô": "vovo_geraldo.jpg", "Tio": "tio_mk.jpg"
+}
 
-# --- 3. PLAYER DE SOM ---
+# --- 3. ESTADOS ---
+if 'moedas' not in st.session_state: st.session_state.moedas = 1000
+if 'grade' not in st.session_state: st.session_state.grade = ["Kamilly"] * 9
+
+# --- 4. MÚSICA DE VEGAS (SÓ ACORDA NO CLIQUE) ---
 st.components.v1.html("""
-    <audio id="musica" loop autoplay><source src="https://soundhelix.com" type="audio/mp3"></audio>
-    <script>document.body.addEventListener('click', function() { document.getElementById('musica').play(); }, {once: true});</script>
+    <audio id="arcade-music" loop autoplay><source src="https://soundhelix.com" type="audio/mp3"></audio>
+    <script>document.body.addEventListener('click', function() { document.getElementById('arcade-music').play(); }, {once: true});</script>
 """, height=0)
 
-# --- 4. MENU LATERAL ---
-with st.sidebar:
-    st.title("🕹️ MENU")
-    st.session_state.jogo = st.radio("JOGO:", ["🎰 ROLETA", "🐍 COBRINHA"])
-    st.divider()
-    st.markdown(f"<p class='moedas'>💰 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
+# --- 5. INTERFACE PRINCIPAL ---
+st.markdown("<h1>🎰 KAMILLY LUCKY SLOT 🎰</h1>", unsafe_allow_html=True)
+st.markdown(f"<p class='moedas'>💰 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
 
-# --- JOGO: COBRINHA TRADICIONAL (HTML/JS) ---
-if st.session_state.jogo == "🐍 COBRINHA":
-    st.markdown("<h1>🐍 SNAKE TRADICIONAL</h1>", unsafe_allow_html=True)
-    
-    # Motor do Jogo em JavaScript (Igual ao clássico)
-    snake_game_html = """
-    <div style="text-align: center;">
-        <canvas id="snakeGame" width="300" height="300" style="border: 2px solid gold; background: #111;"></canvas>
-        <div style="margin-top: 10px;">
-            <button onclick="changeDir('UP')" style="padding: 10px;">⬆️</button><br>
-            <button onclick="changeDir('LEFT')" style="padding: 10px;">⬅️</button>
-            <button onclick="changeDir('DOWN')" style="padding: 10px;">⬇️</button>
-            <button onclick="changeDir('RIGHT')" style="padding: 10px;">➡️</button>
-        </div>
-    </div>
+st.markdown('<div class="console-box">', unsafe_allow_html=True)
+cols = st.columns(3)
+ps = [cols[i%3].empty() for i in range(9)]
 
-    <script>
-        const canvas = document.getElementById("snakeGame");
-        const ctx = canvas.getContext("2d");
-        let box = 20;
-        let snake = [{x: 9 * box, y: 10 * box}];
-        let food = { x: Math.floor(Math.random()*15)*box, y: Math.floor(Math.random()*15)*box };
-        let d;
+def render(lista):
+    for i in range(9):
+        img_path = familia.get(lista[i])
+        if img_path and os.path.exists(img_path):
+            ps[i].image(img_path)
+        else:
+            ps[i].write(f"📸\n{lista[i]}")
 
-        function changeDir(dir) { d = dir; }
-        document.addEventListener("keydown", e => {
-            if(e.keyCode == 37) d = "LEFT";
-            if(e.keyCode == 38) d = "UP";
-            if(e.keyCode == 39) d = "RIGHT";
-            if(e.keyCode == 40) d = "DOWN";
-        });
+# Desenha o estado inicial
+render(st.session_state.grade)
+st.markdown('</div>', unsafe_allow_html=True)
 
-        function draw() {
-            ctx.fillStyle = "#111"; ctx.fillRect(0, 0, 300, 300);
-            for(let i=0; i<snake.length; i++){
-                ctx.fillStyle = (i==0)? "gold" : "white";
-                ctx.fillRect(snake[i].x, snake[i].y, box, box);
-            }
-            ctx.fillStyle = "red"; ctx.fillRect(food.x, food.y, box, box);
+st.write("")
 
-            let snakeX = snake[0].x; let snakeY = snake[0].y;
-            if( d == "LEFT") snakeX -= box;
-            if( d == "UP") snakeY -= box;
-            if( d == "RIGHT") snakeX += box;
-            if( d == "DOWN") snakeY += box;
+# BOTÃO DE GIRO ÚNICO
+if st.button("🔥 GIRAR E GANHAR ($50) 🔥"):
+    if st.session_state.moedas >= 50:
+        st.session_state.moedas -= 50
+        
+        # Animação de giro rápido
+        for _ in range(8):
+            render([random.choice(list(familia.keys())) for _ in range(9)])
+            time.sleep(0.06)
+        
+        # Lógica de Sorte (30% Chance de Jackpot)
+        if random.random() < 0.30:
+            vencedor = random.choice(list(familia.keys()))
+            st.session_state.grade = [vencedor] * 9
+            st.session_state.moedas += 3000
+            st.balloons()
+            st.success(f"💎 JACKPOT! +$3000")
+        else:
+            st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
+            render(st.session_state.grade)
+        
+        st.rerun()
+    else:
+        st.error("Moedas insuficientes! Clique no Reboot.")
 
-            if(snakeX == food.x && snakeY == food.y){
-                food = { x: Math.floor(Math.random()*15)*box, y: Math.floor(Math.random()*15)*box };
-            } else { snake.pop(); }
-
-            let newHead = {x: snakeX, y: snakeY};
-            if(snakeX<0 || snakeX>=300 || snakeY<0 || snakeY>=300) location.reload();
-            snake.unshift(newHead);
-        }
-        setInterval(draw, 150);
-    </script>
-    """
-    st.components.v1.html(snake_game_html, height=450)
-    st.info("Use as setas do teclado ou os botões acima!")
-
-# --- JOGO: ROLETA (MANTIDA) ---
-else:
-    st.write("### 🎰 Volte para a Roleta quando quiser gastar suas moedas!")
+# Botão de Reset escondido no final
+if st.button("🔄 RECARREGAR ENERGIA"):
+    st.session_state.moedas = 1000
+    st.rerun()
