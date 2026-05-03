@@ -2,39 +2,35 @@ import streamlit as st
 import random
 import time
 
-# --- 1. CONFIGURAÇÃO PROFISSIONAL ---
-st.set_page_config(page_title="KAMILLY JACKPOT", layout="centered", page_icon="🎰")
+# --- 1. CONFIGURAÇÃO ---
+st.set_page_config(page_title="KAMILLY ARCADE PRO", layout="centered")
 
-# --- 2. BANCO DE DADOS (Blindado) ---
-# DICA: Verifique se os nomes das fotos no GitHub são EXATAMENTE esses (minúsculos)
+# --- 2. BANCO DE DADOS (LINKS DIRETOS) ---
 USUARIO = "henriquejh" 
 REPO = "kamilly-match-adventure"
 URL_BASE = f"https://githubusercontent.com{USUARIO}/{REPO}/main/"
 
+# Dicionário simplificado para evitar erros de leitura
 familia = {
-    "kamilly": [f"{URL_BASE}kamilly.jpg", "👑"],
-    "papai": [f"{URL_BASE}papai.jpg", "🧔"],
-    "mamae": [f"{URL_BASE}mamae.jpg", "👩‍🦰"],
-    "kauan": [f"{URL_BASE}kauan.jpg", "🤙"],
-    "vovog": [f"{URL_BASE}vovo_geraldo.jpg", "🤠"],
-    "tiomk": [f"{URL_BASE}tio_mk.jpg", "🍻"],
-    "vovon": [f"{URL_BASE}vovo_neusa.jpg", "🌸"],
-    "vovodiva": [f"{URL_BASE}vova_diva.jpg", "💎"]
+    "kamilly": f"{URL_BASE}kamilly.jpg",
+    "papai": f"{URL_BASE}papai.jpg",
+    "mamae": f"{URL_BASE}mamae.jpg",
+    "kauan": f"{URL_BASE}kauan.jpg",
+    "vovog": f"{URL_BASE}vovo_geraldo.jpg",
+    "tiomk": f"{URL_BASE}tio_mk.jpg",
+    "vovon": f"{URL_BASE}vovo_neusa.jpg",
+    "vovodiva": f"{URL_BASE}vova_diva.jpg"
 }
 
-# --- 3. SONS E EFEITOS ESPECIAIS (Unity Style) ---
-def tocar_efeito(som):
-    sons = {
-        "giro": "https://soundjay.com",
-        "vitoria": "https://soundjay.com"
-    }
-    st.components.v1.html(f"<audio autoplay><source src='{sons[som]}' type='audio/mp3'></audio>", height=0)
+# --- 3. ESTADOS ---
+if 'moedas' not in st.session_state: st.session_state.moedas = 1000
+if 'grade' not in st.session_state: st.session_state.grade = random.choices(list(familia.keys()), k=9)
 
-# --- 4. ESTILO VISUAL ARCADE (CSS) ---
+# --- 4. ESTILO E ANIMAÇÃO (Unity Style) ---
 st.markdown(f"""
     <style>
     .main {{ background-color: #050a1a; }}
-    .slot-frame {{
+    .arcade-frame {{
         border: 8px solid #ffd700; border-radius: 20px;
         background: #000; padding: 10px; box-shadow: 0 0 40px #ffd700;
         max-width: 350px; margin: auto;
@@ -45,70 +41,58 @@ st.markdown(f"""
         font-size: 30px; font-weight: bold; text-align: center;
         box-shadow: 0 0 20px #00ff00; margin-bottom: 20px;
     }}
-    img {{ border-radius: 12px; border: 2px solid gold; object-fit: cover; height: 90px !important; }}
-    .stButton>button {{
-        background: linear-gradient(to bottom, #ff0000, #8b0000) !important;
-        color: white !important; font-size: 22px !important; height: 65px !important;
-        border-radius: 15px !important; border: 2px solid gold !important;
-        box-shadow: 0 6px 0 #5a0000 !important;
+    .slot-img {{
+        width: 100%; height: 90px; border-radius: 10px;
+        border: 2px solid gold; object-fit: cover;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. LÓGICA DE ESTADO ---
-if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-if 'grade' not in st.session_state: st.session_state.grade = random.choices(list(familia.keys()), k=9)
+# --- 5. FUNÇÃO DE RENDERIZAÇÃO BLINDADA ---
+def renderizar_arcade(lista_nomes):
+    cols_html = "<div class='arcade-frame'><div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;'>"
+    for nome in lista_nomes:
+        url = familia.get(nome, "")
+        cols_html += f"<img src='{url}' class='slot-img' onerror=\"this.src='https://placeholder.com❓'\">"
+    cols_html += "</div></div>"
+    st.markdown(cols_html, unsafe_allow_html=True)
 
-# --- 6. RENDERIZAÇÃO DA ROLETA ---
+# --- 6. INTERFACE ---
 st.markdown("<h1 style='text-align:center; color:gold;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
-placeholder = st.empty()
+container_jogo = st.empty()
 
-def renderizar_roleta(lista):
-    with placeholder.container():
-        st.markdown('<div class="slot-frame">', unsafe_allow_html=True)
-        for r in range(3):
-            cols = st.columns(3)
-            for c in range(3):
-                idx = r * 3 + c
-                nome = lista[idx]
-                # Busca segura para evitar o KeyError
-                item = familia.get(nome, ["", "❓"])
-                cols[c].image(item, caption=item, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+with container_jogo:
+    renderizar_arcade(st.session_state.grade)
 
-renderizar_roleta(st.session_state.grade)
-
-# --- 7. BOTÃO DE GIRO COM ANIMAÇÃO ---
+# --- 7. LÓGICA DE GIRO COM EFEITOS ---
 if st.button("🔥 GIRAR ROLETA ($50) 🔥"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        tocar_efeito("giro")
         
-        # ANIMAÇÃO DE GIRO (Frames rápidos)
-        for _ in range(8):
-            giro_temp = random.choices(list(familia.keys()), k=9)
-            renderizar_roleta(giro_temp)
+        # SOM DE GIRO
+        st.components.v1.html("<audio autoplay><source src='https://soundjay.com' type='audio/mp3'></audio>", height=0)
+        
+        # ANIMAÇÃO DE GIRO (Frames)
+        for _ in range(10):
+            giro_fake = random.choices(list(familia.keys()), k=9)
+            with container_jogo:
+                renderizar_arcade(giro_fake)
             time.sleep(0.1)
         
-        # RESULTADO FINAL
-        if random.random() < 0.30: # 30% de chance de ganhar
-            vencedor = random.choice(list(familia.keys()))
-            st.session_state.grade = [vencedor] * 9
+        # SORTEIO FINAL
+        if random.random() < 0.35: # Chance de ganhar
+            venc = random.choice(list(familia.keys()))
+            st.session_state.grade = [venc] * 9
             st.session_state.moedas += 3000
-            renderizar_roleta(st.session_state.grade)
-            tocar_efeito("vitoria")
             st.balloons()
-            st.success(f"🏆 JACKPOT! +$3000 com {vencedor.upper()}!")
+            st.components.v1.html("<audio autoplay><source src='https://soundjay.com' type='audio/mp3'></audio>", height=0)
         else:
             st.session_state.grade = random.choices(list(familia.keys()), k=9)
-            renderizar_roleta(st.session_state.grade)
         
         st.rerun()
-    else:
-        st.error("Sem moedas!")
 
-if st.sidebar.button("🔄 Recarregar Moedas"):
+if st.sidebar.button("🔄 RECARREGAR MOEDAS"):
     st.session_state.moedas = 1000
     st.rerun()
