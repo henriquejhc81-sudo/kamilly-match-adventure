@@ -1,15 +1,15 @@
 {
-  "name": "Kamilly World",
-  "short_name": "Kamilly",
+  "name": "Kamilly Arcade",
+  "short_name": "KamillyGame",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFEDF6",
-  "theme_color": "#FF1493",
+  "background_color": "#001f3f",
+  "theme_color": "#ffd700",
   "icons": [
     {
-      "src": "kamilly.jpg",
-      "sizes": "192x192",
-      "type": "image/jpg"
+      "src": "https://icons8.com",
+      "sizes": "200x200",
+      "type": "image/png"
     }
   ]
 }
