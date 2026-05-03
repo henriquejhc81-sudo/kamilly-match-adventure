@@ -4,194 +4,159 @@ import time
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO DE ENGINE ---
+# --- 1. CONFIGURAÇÃO DE ALTA PERFORMANCE ---
 st.set_page_config(page_title="KAMILLY ARCADE PRO", layout="centered", page_icon="🎰")
 
-# --- 2. BANCO DE DADOS (TODOS OS 11 PERSONAGENS PRESERVADOS) ---
+# --- 2. BANCO DE DADOS (11 PERSONAGENS PRESERVADOS) ---
 familia_config = {
-    "kamilly": ["kamilly.jpg", "👑"],
-    "kauan": ["kauan.jpg", "🤙"],
-    "mamae": ["mamae.jpg", "👩‍🦰"],
-    "papai": ["papai.jpg", "🧔"],
-    "tio_michel": ["tio_michel.jpg", "👨‍💻"],
-    "tio_mk": ["tio_mk.jpg", "🍻"],
-    "tio_padrinho": ["tio_padrinho.jpg", "🤟"],
-    "vovo_diva": ["vovo_diva.jpg", "💎"],
-    "vovo_geraldo": ["vovo_geraldo.jpg", "🤠"],
-    "vovo_mario": ["vovo_mario.jpg", "👨‍🦳"],
+    "kamilly": ["kamilly.jpg", "👑"], "kauan": ["kauan.jpg", "🤙"],
+    "mamae": ["mamae.jpg", "👩‍🦰"], "papai": ["papai.jpg", "🧔"],
+    "tio_michel": ["tio_michel.jpg", "👨‍💻"], "tio_mk": ["tio_mk.jpg", "🍻"],
+    "tio_padrinho": ["tio_padrinho.jpg", "🤟"], "vovo_diva": ["vovo_diva.jpg", "💎"],
+    "vovo_geraldo": ["vovo_geraldo.jpg", "🤠"], "vovo_mario": ["vovo_mario.jpg", "👨‍🦳"],
     "vovo_neusa": ["vovo_neusa.jpg", "🌸"]
 }
 
-# --- 3. CACHE DE IMAGENS (ALTA VELOCIDADE) ---
+# --- 3. CACHE ATÔMICO (EVITA TELA PRETA E LAG) ---
 @st.cache_data
-def carregar_assets_base64():
-    assets_b64 = {}
+def carregar_tudo_b64():
+    memo = {}
     for nome, info in familia_config.items():
         caminho = info[0]
         if os.path.exists(caminho):
-            try:
-                with open(caminho, "rb") as f:
-                    b64 = base64.b64encode(f.read()).decode()
-                    assets_b64[nome] = f"data:image/jpeg;base64,{b64}"
-            except:
-                assets_b64[nome] = None
+            with open(caminho, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode()
+                memo[nome] = f"data:image/jpeg;base64,{b64}"
         else:
-            assets_b64[nome] = None
-    return assets_b64
+            memo[nome] = None
+    return memo
 
-assets_ready = carregar_assets_base64()
+assets = carregar_tudo_b64()
 
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
-if 'vitoria' not in st.session_state: st.session_state.vitoria = False
 
-# --- 4. CSS PROFISSIONAL CORRIGIDO (SEM ERRO DE CHAVES) ---
-# Usei f-strings duplas {{ }} para evitar o erro de sintaxe do Python
-cor_borda = "#FF1493" if st.session_state.vitoria else "#0055ff"
-brilho_borda = "60px #FF1493" if st.session_state.vitoria else "30px #0055ff"
-
-st.markdown(f"""
+# --- 4. CSS BLINDADO (FIM DA TREPIDAÇÃO E IMAGEM FOSCA) ---
+st.markdown("""
     <style>
-    .block-container {{ padding-top: 0rem !important; margin-top: -60px !important; }}
-    .main {{ background-color: #050a1a; }}
-    header {{ visibility: hidden; }}
+    .block-container { padding-top: 0rem !important; margin-top: -60px !important; }
+    .main { background-color: #050a1a; overflow: hidden; }
+    header { visibility: hidden; }
     
-    .kamilly-header {{ 
-        color: #FF69B4; 
-        text-align: center; 
-        font-size: 65px; 
+    .kamilly-header { 
+        color: #FF69B4; text-align: center; font-size: 60px; 
         font-family: 'Comic Sans MS', cursive;
-        text-shadow: 0 0 20px #FF69B4, 0 0 40px #FF69B4, 2px 2px #fff;
+        text-shadow: 0 0 15px #FF69B4, 2px 2px #fff;
         margin-bottom: 0px;
-        animation: glow 1.5s infinite alternate;
-    }}
-    @keyframes glow {{ 
-        from {{ opacity: 0.8; }} 
-        to {{ opacity: 1; text-shadow: 0 0 30px #FF69B4, 0 0 50px #FF1493, 2px 2px #fff; }} 
-    }}
+    }
 
-    .arcade-frame {{
-        border: 10px solid {cor_borda};
-        border-radius: 30px;
-        background: #000;
-        padding: 0px;
-        margin: auto;
-        overflow: hidden;
-        max-width: 320px;
+    .arcade-frame {
+        border: 10px solid #0055ff; border-radius: 30px;
+        background: #000; padding: 0px; margin: auto;
+        overflow: hidden; max-width: 310px;
+        box-shadow: 0 0 35px #0055ff;
         line-height: 0;
-        box-shadow: 0 0 {brilho_borda};
-        transition: all 0.4s ease;
-    }}
+    }
 
-    .grid-container {{
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-gap: 0px;
-        width: 100%;
-    }}
+    .grid-container {
+        display: grid; grid-template-columns: 1fr 1fr;
+        grid-gap: 0px; width: 100%;
+    }
 
-    .reel-spin img {{
-        animation: slideVertical 0.06s infinite linear;
-        filter: blur(2px) brightness(1.2);
-    }}
-    @keyframes slideVertical {{ 0% {{ transform: translateY(-8px); }} 100% {{ transform: translateY(8px); }} }}
+    /* ANIMAÇÃO DE ROLETA REAL (MOVIMENTO VERTICAL LISO) */
+    .slot-move {
+        animation: slideSlot 0.1s infinite linear;
+        filter: none !important; /* REMOVE O FOSCO */
+    }
 
-    .grid-container img {{
-        width: 100%;
-        height: 160px;
-        object-fit: cover;
-        display: block;
-    }}
+    @keyframes slideSlot {
+        0% { transform: translateY(-5px); }
+        50% { transform: translateY(5px); }
+        100% { transform: translateY(-5px); }
+    }
 
-    .moedas-banner {{
+    .grid-container img {
+        width: 100%; height: 155px; object-fit: cover; display: block;
+        border: 0.1px solid rgba(255,255,255,0.1);
+    }
+
+    .moedas-banner {
         background: linear-gradient(90deg, #FFB6C1, #FF69B4);
-        color: white; padding: 12px; border-radius: 50px;
-        font-size: 30px; font-weight: bold; text-align: center;
-        max-width: 260px; margin: 10px auto;
+        color: white; padding: 10px; border-radius: 50px;
+        font-size: 28px; font-weight: bold; text-align: center;
+        max-width: 240px; margin: 10px auto;
         box-shadow: 0 0 20px #FF69B4;
-        border: 2px solid white;
-    }}
+    }
 
-    .stButton>button {{
-        background: linear-gradient(145deg, #FFB6C1, #FF69B4) !important;
-        color: white !important;
-        font-size: 28px !important;
-        font-weight: bold !important;
-        height: 80px !important;
-        width: 100% !important;
-        max-width: 280px !important;
-        border-radius: 50px !important;
-        border: 4px solid #fff !important;
-        box-shadow: 0 10px 20px rgba(255, 105, 180, 0.5) !important;
-        margin: 15px auto !important;
-        display: block !important;
-    }}
+    .stButton>button {
+        background: linear-gradient(145deg, #FF69B4, #FF1493) !important;
+        color: white !important; font-size: 26px !important; font-weight: bold !important;
+        height: 75px !important; width: 100% !important; max-width: 280px !important;
+        border-radius: 50px !important; border: 4px solid #fff !important;
+        margin: 10px auto !important; display: block !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. MOTOR DE SOM ---
-def sound_engine(tipo):
+# --- 5. MOTOR DE ÁUDIO ---
+def play_sound(tipo):
     urls = {
-        'giro': 'https://soundjay.com',
-        'vitoria': 'https://soundjay.com'
+        'spin': 'https://soundjay.com',
+        'win': 'https://soundjay.com'
     }
-    st.components.v1.html(f"""
-        <audio autoplay><source src="{urls[tipo]}" type="audio/mp3"></audio>
-    """, height=0)
+    st.components.v1.html(f"<audio autoplay><source src='{urls[tipo]}' type='audio/mp3'></audio>", height=0)
 
 # --- 6. INTERFACE ---
 st.markdown("<p class='kamilly-header'>Kamilly</p>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
-caixa_roleta = st.empty()
+# CONTAINER FIXO (Evita que a tela pule ou fique preta)
+placeholder_roleta = st.empty()
 
-def mostrar_roleta(lista, girando=False):
-    classe_giro = "reel-spin" if girando else ""
-    html = f'<div class="arcade-frame"><div class="grid-container {classe_giro}">'
+def render_ui(lista, animar=False):
+    css_classe = "slot-move" if animar else ""
+    html = f'<div class="arcade-frame"><div class="grid-container {css_classe}">'
     for nome in lista:
-        b64 = assets_ready.get(nome)
-        if b64:
-            style = "filter: brightness(1.3) contrast(1.1); transform: scale(1.05);" if st.session_state.vitoria else ""
-            html += f'<img src="{b64}" style="{style}">'
+        url_b64 = assets.get(nome)
+        if url_b64:
+            html += f'<img src="{url_b64}">'
         else:
-            emoji = familia_config.get(nome, ["", "💎"])[1]
-            html += f'<div style="height:160px; background:#111; display:flex; align-items:center; justify-content:center; font-size:50px;">{emoji}</div>'
+            emoji = familia_config[nome][1]
+            html += f'<div style="height:155px; background:#111; display:flex; align-items:center; justify-content:center; font-size:50px;">{emoji}</div>'
     html += '</div></div>'
-    caixa_roleta.markdown(html, unsafe_allow_html=True)
+    placeholder_roleta.markdown(html, unsafe_allow_html=True)
 
-mostrar_roleta(st.session_state.grade)
+render_ui(st.session_state.grade)
 
-# --- 7. LÓGICA DE GIRO ---
+# --- 7. LÓGICA DE GIRO PROFISSIONAL ---
 if st.button("VAMOS BRINCAR"):
-    st.session_state.vitoria = False
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        sound_engine('giro')
+        play_sound('spin')
         
-        frames = 15
-        for i in range(frames):
-            grade_temp = random.choices(list(familia_config.keys()), k=6)
-            mostrar_roleta(grade_temp, girando=True)
-            delay = 0.02 + (i/frames)**2 * 0.08
-            time.sleep(delay)
+        # GIRO DE ALTA VELOCIDADE (Animação sem lag)
+        for i in range(12):
+            random_names = random.choices(list(familia_config.keys()), k=6)
+            render_ui(random_names, animar=True)
+            time.sleep(0.05)
         
+        # RESULTADO (RNG)
         if random.random() < 0.35:
             venc = random.choice(list(familia_config.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2500
-            st.session_state.vitoria = True
-            mostrar_roleta(st.session_state.grade, girando=False)
+            render_ui(st.session_state.grade, animar=False)
             st.balloons()
-            sound_engine('vitoria')
+            play_sound('win')
         else:
             st.session_state.grade = random.choices(list(familia_config.keys()), k=6)
-            mostrar_roleta(st.session_state.grade, girando=False)
+            render_ui(st.session_state.grade, animar=False)
         
+        # Atualiza o saldo sem dar tela preta
         st.rerun()
     else:
-        st.error("Ops! Suas moedas acabaram.")
+        st.error("Ops! Moedas acabaram.")
 
 if st.sidebar.button("🔄 RECARREGAR"):
     st.session_state.moedas = 1000
-    st.session_state.vitoria = False
     st.rerun()
