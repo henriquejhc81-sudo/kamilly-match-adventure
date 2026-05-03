@@ -19,55 +19,44 @@ familia = {
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 3. SOUND ENGINE & ATTRACT MODE (JS) ---
-# Gerencia os áudios via Gatilhos (Triggers)
+# --- 3. SOUND ENGINE (JS) ---
 def sound_engine():
     st.components.v1.html("""
         <script>
         window.playSFX = function(type) {
             const sounds = {
                 'spin': 'https://soundjay.com',
-                'win': 'https://soundjay.com',
-                'attract': 'https://soundjay.com'
+                'win': 'https://soundjay.com'
             };
             var audio = new Audio(sounds[type]);
-            audio.volume = 0.5;
+            audio.volume = 0.4;
             audio.play();
         }
         </script>
     """, height=0)
 
-# --- 4. CSS: REELS, VIRTUAL MAPPING & FIX HEADER ---
+# --- 4. CSS: AJUSTE DE VELOCIDADE E COR ROSA ---
 st.markdown("""
     <style>
-    /* FIX: Nome Kamilly no topo sem vãos */
     .block-container { padding-top: 0rem !important; margin-top: -80px !important; }
     .main { background-color: #050a1a; }
     header {visibility: hidden;}
     
+    /* NOME KAMILLY EM ROSA COM BRILHO */
     .kamilly-header { 
         color: #FF69B4; 
         text-align: center; 
         font-size: 60px; 
         font-family: 'Comic Sans MS', cursive;
-        text-shadow: 0 0 20px #FF69B4, 2px 2px #fff;
+        text-shadow: 0 0 15px #FF69B4, 2px 2px #fff;
         margin-bottom: 0px;
-        animation: attractMode 2s infinite alternate;
     }
 
-    /* ATTRACT MODE: Brilho pulsante no título */
-    @keyframes attractMode {
-        from { filter: brightness(1); }
-        to { filter: brightness(1.5) drop-shadow(0 0 15px #FF69B4); }
-    }
-
-    /* REELS: Efeito de rolo de cassino */
     .arcade-frame {
         border: 10px solid #FF69B4; border-radius: 30px;
         background: #000; padding: 0px; margin: auto;
         overflow: hidden; max-width: 320px;
-        box-shadow: 0 0 50px #FF69B4;
-        position: relative;
+        box-shadow: 0 0 40px #FF69B4;
     }
 
     .grid-container {
@@ -75,15 +64,15 @@ st.markdown("""
         grid-gap: 0px; width: 100%;
     }
 
-    /* ANIMAÇÃO DE GIRO (SPIN) COM BLUR (DESFOQUE) */
+    /* REMOVIDO EFEITO FOSCO (BLUR) - APENAS MOVIMENTO RÁPIDO */
     .reel-spin {
-        animation: blurSpin 0.1s infinite linear;
+        animation: fastMove 0.05s infinite linear;
     }
 
-    @keyframes blurSpin {
-        0% { transform: translateY(-10px); filter: blur(2px); }
-        50% { transform: translateY(10px); filter: blur(5px); }
-        100% { transform: translateY(-10px); filter: blur(2px); }
+    @keyframes fastMove {
+        0% { transform: translateY(-5px); }
+        50% { transform: translateY(5px); }
+        100% { transform: translateY(-5px); }
     }
 
     .grid-container img {
@@ -100,10 +89,10 @@ st.markdown("""
 
     .stButton>button {
         background: linear-gradient(145deg, #FF69B4, #FF1493) !important;
-        color: white !important; font-size: 30px !important; font-weight: bold !important;
-        height: 80px !important; width: 100% !important; max-width: 280px !important;
+        color: white !important; font-size: 28px !important; font-weight: bold !important;
+        height: 75px !important; width: 100% !important; max-width: 280px !important;
         border-radius: 50px !important; border: 4px solid #fff !important;
-        box-shadow: 0 10px 20px rgba(255, 20, 147, 0.4) !important;
+        box-shadow: 0 8px 15px rgba(255, 20, 147, 0.4) !important;
         margin: 10px auto !important; display: block !important;
     }
     </style>
@@ -119,14 +108,13 @@ def get_base64(file_path):
 def trigger_audio(type):
     st.components.v1.html(f"<script>window.playSFX('{type}')</script>", height=0)
 
-# --- 6. INTERFACE (O NOME KAMILLY AGORA É O TOPO) ---
+# --- 6. INTERFACE ---
 st.markdown("<p class='kamilly-header'>Kamilly</p>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
 caixa_roleta = st.empty()
 
 def mostrar_roleta(lista, girando=False):
-    # Virtual Reel Mapping: Se girando, aplica a classe reel-spin
     classe_giro = "reel-spin" if girando else ""
     html = f'<div class="arcade-frame"><div class="grid-container {classe_giro}">'
     for nome in lista:
@@ -137,46 +125,38 @@ def mostrar_roleta(lista, girando=False):
     html += '</div></div>'
     caixa_roleta.markdown(html, unsafe_allow_html=True)
 
-# Chamada inicial
 sound_engine()
 mostrar_roleta(st.session_state.grade)
 
-# --- 7. LÓGICA DE SPIN (GIRO) ---
+# --- 7. LÓGICA DE GIRO (TURBO) ---
 if st.button("VAMOS BRINCAR"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        
-        # GATILHO (Trigger): Som de Spin
         trigger_audio('spin')
         
-        # GIRO (Spin Animation): Mapeamento Virtual de 12 quadros
-        for _ in range(12):
+        # GIRO TURBO: Mais quadros em menos tempo para parecer roleta real
+        for _ in range(15):
             grade_temp = random.choices(list(familia.keys()), k=6)
             mostrar_roleta(grade_temp, girando=True)
-            time.sleep(0.04) # Velocidade extrema de slot machine
+            time.sleep(0.02) # Velocidade máxima permitida pelo navegador
         
-        # RNG (Gerador de Números Aleatórios): Define o prêmio
-        sorteio_rng = random.random()
-        if sorteio_rng < 0.35: # 35% de chance (Jackpot)
+        # RNG: Resultado
+        if random.random() < 0.35:
             venc = random.choice(list(familia.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2500
             mostrar_roleta(st.session_state.grade, girando=False)
-            
-            # GATILHO: Efeitos de Jackpot
             st.balloons()
             trigger_audio('win')
-            st.success("✨ JACKPOT! ✨")
+            st.success("✨ GANHOU! ✨")
         else:
             st.session_state.grade = random.choices(list(familia.keys()), k=6)
             mostrar_roleta(st.session_state.grade, girando=False)
         
         st.rerun()
     else:
-        st.error("Moedas esgotadas!")
+        st.error("Sem moedas!")
 
-# Attract Mode manual
 if st.sidebar.button("🔄 RECARREGAR"):
     st.session_state.moedas = 1000
-    trigger_audio('attract')
     st.rerun()
