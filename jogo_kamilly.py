@@ -7,25 +7,33 @@ import base64
 # --- 1. CONFIGURAÇÃO ---
 st.set_page_config(page_title="KAMILLY ARCADE 2x3", layout="centered", page_icon="🎰")
 
-# --- 2. BANCO DE DADOS ---
+# --- 2. BANCO DE DADOS (11 PERSONAGENS CONFERIDOS) ---
 familia = {
-    "kamilly": ["kamilly.jpg", "👑"], "papai": ["papai.jpg", "🧔"],
-    "mamae": ["mamae.jpg", "👩‍🦰"], "kauan": ["kauan.jpg", "🤙"],
-    "tio_michel": ["tio_michel.jpg", "👨‍💻"], "tio_mk": ["tio_mk.jpg", "🍻"],
-    "tio_padrinho": ["tio_padrinho.jpg", "🤟"], "vovo_diva": ["vovo_diva.jpg", "💎"],
-    "vovo_geraldo": ["vovo_geraldo.jpg", "🤠"], "vovo_mario": ["vovo_mario.jpg", "👨‍🦳"],
+    "kamilly": ["kamilly.jpg", "👑"],
+    "papai": ["papai.jpg", "🧔"],
+    "mamae": ["mamae.jpg", "👩‍🦰"],
+    "kauan": ["kauan.jpg", "🤙"],
+    "tio_michel": ["tio_michel.jpg", "👨‍💻"],
+    "tio_mk": ["tio_mk.jpg", "🍻"],
+    "tio_padrinho": ["tio_padrinho.jpg", "🤟"],
+    "vovo_diva": ["vovo_diva.jpg", "💎"],
+    "vovo_geraldo": ["vovo_geraldo.jpg", "🤠"],
+    "vovo_mario": ["vovo_mario.jpg", "👨‍🦳"],
     "vovo_neusa": ["vovo_neusa.jpg", "🌸"]
 }
 
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 3. CSS "NUCLEAR" (IGNORA REGRAS DO STREAMLIT E COLA TUDO) ---
+# --- 3. CSS "NUCLEAR" (TRAVA O SCROLL E COLA IMAGENS) ---
 st.markdown("""
+    <div id="topo"></div>
     <style>
     .main { background-color: #050a1a; }
     
-    /* FRAME DO JOGO (AZUL) */
+    /* TRAVA A TELA PARA NÃO SUBIR */
+    section.main { overflow: hidden !important; }
+
     .arcade-frame {
         border: 8px solid #0055ff;
         border-radius: 20px;
@@ -35,14 +43,13 @@ st.markdown("""
         max-width: 320px;
         margin: auto;
         overflow: hidden;
-        line-height: 0; /* REMOVE VÃO VERTICAL */
+        line-height: 0;
     }
 
-    /* GRID MANUAL QUE NÃO EMPILHA NO MOBILE */
     .grid-container {
         display: grid;
-        grid-template-columns: 1fr 1fr; /* FORÇA 2 COLUNAS */
-        grid-gap: 0px; /* COLA AS IMAGENS LADO A LADO */
+        grid-template-columns: 1fr 1fr;
+        grid-gap: 0px;
         width: 100%;
     }
 
@@ -51,7 +58,7 @@ st.markdown("""
         height: 150px;
         object-fit: cover;
         display: block;
-        border: 0.1px solid rgba(255,255,255,0.05); /* LINHA QUASE INVISÍVEL */
+        border: 0.1px solid rgba(255,255,255,0.05);
     }
 
     .slot-reserva {
@@ -61,7 +68,6 @@ st.markdown("""
         align-items: center;
         justify-content: center;
         font-size: 40px;
-        border: 0.1px solid rgba(255,255,255,0.05);
     }
     
     .moedas-banner {
@@ -76,12 +82,19 @@ st.markdown("""
         color: white !important; font-size: 35px !important; 
         height: 80px !important; width: 80px !important;
         border-radius: 50% !important; border: 4px solid #ccc !important;
-        margin: 20px auto !important; display: block !important;
+        margin: 10px auto !important; display: block !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. FUNÇÃO PARA CONVERTER IMAGEM LOCAL PARA HTML ---
+# --- 4. SISTEMA DE ÁUDIO E ANIMAÇÃO ---
+def tocar_audio(url):
+    st.components.v1.html(f"""
+        <audio autoplay>
+            <source src="{url}" type="audio/mp3">
+        </audio>
+    """, height=0)
+
 def get_base64(file_path):
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
@@ -89,25 +102,21 @@ def get_base64(file_path):
         return f"data:image/jpeg;base64,{base64.b64encode(data).decode()}"
     return None
 
-# --- 5. INTERFACE E RENDERIZAÇÃO ---
+# --- 5. INTERFACE ---
 st.markdown("<h1 style='text-align:center; color:#0055ff; font-size:24px;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
 caixa_roleta = st.empty()
 
 def mostrar_roleta(lista_atual):
-    # Criamos o HTML manualmente para o Streamlit não interferir no layout mobile
     html_grid = '<div class="arcade-frame"><div class="grid-container">'
-    
     for nome in lista_atual:
         foto, emoji = familia.get(nome, ["", "💎"])
         b64 = get_base64(foto)
-        
         if b64:
             html_grid += f'<img src="{b64}">'
         else:
             html_grid += f'<div class="slot-reserva">{emoji}</div>'
-            
     html_grid += '</div></div>'
     caixa_roleta.markdown(html_grid, unsafe_allow_html=True)
 
@@ -118,23 +127,35 @@ st.write("")
 if st.button("↻"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        # Efeito de Animação
+        # Música de Giro (Som de arcade)
+        tocar_audio("https://soundjay.com")
+        
         for _ in range(6):
             grade_vibrando = [random.choice(list(familia.keys())) for _ in range(6)]
             mostrar_roleta(grade_vibrando)
             time.sleep(0.1)
         
-        # Resultado Final
+        # Sorteio Final
         if random.random() < 0.35:
             venc = random.choice(list(familia.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2500
             mostrar_roleta(st.session_state.grade)
+            
+            # Efeitos de Vitória
             st.balloons()
+            # Música Infantil de Vitória
+            tocar_audio("https://soundjay.com")
+            st.success(f"🏆 PARABÉNS! +$2500")
         else:
             st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(6)]
             mostrar_roleta(st.session_state.grade)
+        
+        # Script JS para manter o foco no topo sem rolar para baixo
+        st.components.v1.html("<script>window.parent.document.getElementById('topo').scrollIntoView();</script>", height=0)
         st.rerun()
+    else:
+        st.error("Sem moedas!")
 
 if st.sidebar.button("🔄 RECARREGAR"):
     st.session_state.moedas = 1000
