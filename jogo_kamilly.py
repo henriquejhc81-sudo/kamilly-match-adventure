@@ -19,12 +19,12 @@ familia = {
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 3. CSS PARA COLAR AS COLUNAS (FIM DO VÃO PRETO) ---
+# --- 3. CSS "SUPER COLADO" ---
 st.markdown("""
     <style>
     .main { background-color: #050a1a; }
     
-    /* REMOVE O VÃO ENTRE AS COLUNAS */
+    /* REMOVE QUALQUER ESPAÇO ENTRE COLUNAS */
     div[data-testid="column"] {
         width: 50% !important;
         flex: 1 1 50% !important;
@@ -33,13 +33,20 @@ st.markdown("""
         margin: 0px !important;
     }
     
-    /* FORÇA AS IMAGENS A SE TOCAREM NO CENTRO */
+    /* ZERA O GAP DO BLOCO HORIZONTAL */
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 0px !important; /* ZERA O ESPAÇO PRETO */
+        gap: 0px !important; 
         justify-content: center !important;
+        padding: 0px !important;
+    }
+
+    /* REMOVE ESPAÇOS INTERNOS DO STREAMLIT QUE CRIAM VÃOS */
+    div[data-testid="stVerticalBlock"] > div {
+        padding: 0px !important;
+        margin: 0px !important;
     }
 
     .arcade-frame {
@@ -48,20 +55,24 @@ st.markdown("""
         background: #0a2a7a;
         padding: 0px; 
         box-shadow: 0 0 30px #0055ff;
-        max-width: 320px;
+        max-width: 310px;
         margin: auto;
         overflow: hidden;
+        line-height: 0; /* Remove vãos entre linhas de imagem */
     }
 
     img { 
-        border: 0.5px solid rgba(255, 215, 0, 0.2); /* Linha fina para separar */
+        display: block;
         height: 160px !important; 
         width: 100% !important; 
         object-fit: cover; 
+        margin: 0px !important;
+        padding: 0px !important;
+        border: none !important; /* Remove bordas para colar 100% */
     }
     
     .slot-reserva {
-        height: 160px; background: #0a2a7a; border: 0.5px solid rgba(255, 215, 0, 0.2);
+        height: 160px; background: #0a2a7a;
         display: flex; align-items: center; justify-content: center; font-size: 40px;
     }
     
@@ -91,6 +102,7 @@ caixa_roleta = st.empty()
 def mostrar_roleta(lista_atual):
     with caixa_roleta.container():
         st.markdown('<div class="arcade-frame">', unsafe_allow_html=True)
+        # 3 linhas de 2 colunas
         for r in range(3):
             cols = st.columns(2)
             for c in range(2):
@@ -110,13 +122,11 @@ mostrar_roleta(st.session_state.grade)
 if st.button("↻"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        # Som e Animação
         for _ in range(6):
             grade_vibrando = [random.choice(list(familia.keys())) for _ in range(6)]
             mostrar_roleta(grade_vibrando)
             time.sleep(0.1)
         
-        # Resultado
         if random.random() < 0.35:
             venc = random.choice(list(familia.keys()))
             st.session_state.grade = [venc] * 6
@@ -127,3 +137,7 @@ if st.button("↻"):
             st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(6)]
             mostrar_roleta(st.session_state.grade)
         st.rerun()
+
+if st.sidebar.button("🔄 RECARREGAR"):
+    st.session_state.moedas = 1000
+    st.rerun()
