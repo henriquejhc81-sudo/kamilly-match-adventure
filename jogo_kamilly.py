@@ -18,7 +18,7 @@ familia = {
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["Kamilly"] * 9
 
-# --- 4. ESTILIZAÇÃO CSS (FIXO PARA ANDROID) ---
+# --- 4. ESTILIZAÇÃO CSS (SUPER MOBILE ANDROID) ---
 st.markdown("""
     <style>
     .main { background: #000b1e; color: white; }
@@ -27,7 +27,7 @@ st.markdown("""
         background: rgba(0, 0, 0, 0.9); padding: 5px;
         box-shadow: 0 0 15px #ffd700; max-width: 330px; margin: auto;
     }
-    /* FORÇA AS 3 COLUNAS SEMPRE LADO A LADO */
+    /* FORÇA 3 COLUNAS LADO A LADO NO CELULAR */
     div[data-testid="column"] {
         width: 32% !important; flex: 1 1 32% !important; min-width: 32% !important;
     }
@@ -37,10 +37,10 @@ st.markdown("""
     }
     img { 
         border-radius: 8px; border: 2px solid gold; 
-        height: 85px !important; width: 85px !important; object-fit: cover; 
+        height: 80px !important; width: 80px !important; object-fit: cover; 
     }
     .slot-box {
-        height: 85px; width: 100%; background: #222; border-radius: 8px; 
+        height: 80px; width: 100%; background: #222; border-radius: 8px; 
         display: flex; flex-direction: column; align-items: center; 
         justify-content: center; border: 1px solid gold;
     }
@@ -51,7 +51,7 @@ st.markdown("""
         font-size: 20px !important; margin-top: 10px !important;
     }
     .moedas { color: #00ff00; font-size: 30px; font-weight: bold; text-align: center; }
-    h1 { color: #ffd700; text-align: center; font-size: 20px; }
+    h1 { color: #ffd700; text-align: center; font-size: 20px; margin-bottom: 10px; }
     [data-testid="stSidebar"] { background-color: #000b1e; border-right: 2px solid gold; }
     </style>
     """, unsafe_allow_html=True)
@@ -68,8 +68,8 @@ with st.sidebar:
 # --- 6. JOGO PRINCIPAL ---
 if opcao == "🎰 Jackpot":
     st.markdown("<h1>🎰 FESTA DO JACKPOT 🎰</h1>", unsafe_allow_html=True)
-    st.markdown('<div class="slot-frame">', unsafe_allow_html=True)
     
+    st.markdown('<div class="slot-frame">', unsafe_allow_html=True)
     for r in range(3):
         cols = st.columns(3)
         for c in range(3):
@@ -78,9 +78,9 @@ if opcao == "🎰 Jackpot":
             dados = familia.get(nome_p, ["", "❓"])
             foto, emoji = dados, dados[1]
 
-            # Lógica Blindada: Tenta carregar imagem, se der qualquer erro, mostra o emoji
+            # Tenta mostrar imagem, senão mostra o emoji quadrado
             try:
-                if foto == "": raise Exception("Vazio")
+                if foto == "" or not st.image(foto): raise Exception()
                 cols[c].image(foto, use_container_width=True)
             except:
                 cols[c].markdown(f"""
@@ -103,4 +103,4 @@ if opcao == "🎰 Jackpot":
                 st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
             st.rerun()
 else:
-    st.info("Escolha 'Jackpot' para jogar!")
+    st.info("Selecione 'Jackpot' para jogar!")
