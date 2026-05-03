@@ -3,51 +3,52 @@ import random
 import os
 import time
 
-# --- 1. CONFIGURAÇÃO DE TELA CHEIA ---
+# --- 1. CONFIGURAÇÃO DE TELA ---
 st.set_page_config(page_title="KAMILLY LUCKY SLOT", layout="centered", page_icon="🎰")
 
 st.markdown("""
     <style>
     .main { background: #000b1e; }
     .console-box {
-        border: 8px solid #ffd700; border-radius: 30px;
-        background: rgba(0, 0, 0, 0.9); padding: 25px;
-        box-shadow: 0 0 50px #ffd700; text-align: center;
-        max-width: 500px; margin: auto;
+        border: 6px solid #ffd700; border-radius: 25px;
+        background: rgba(0, 0, 0, 0.9); padding: 15px;
+        box-shadow: 0 0 40px #ffd700; text-align: center;
+        max-width: 480px; margin: auto;
     }
     img { 
-        border-radius: 20px; border: 3px solid #ffd700; 
-        height: 130px !important; width: 130px !important; object-fit: cover; 
+        border-radius: 15px; border: 2px solid #ffd700; 
+        height: 110px !important; width: 110px !important; object-fit: cover; 
     }
     .stButton>button {
         background: radial-gradient(circle, #ffd700, #b8860b) !important;
         color: black !important; border-radius: 50px !important;
-        font-weight: bold !important; height: 70px !important; width: 100% !important;
-        font-size: 25px !important; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        border: 2px solid white !important;
+        font-weight: bold !important; height: 65px !important; width: 100% !important;
+        font-size: 22px !important; box-shadow: 0 8px 15px rgba(0,0,0,0.5);
     }
-    .moedas { color: #00ff00; font-size: 45px; font-weight: bold; text-align: center; text-shadow: 2px 2px #000; }
-    h1 { color: #ffd700; text-align: center; font-size: 35px; text-shadow: 0 0 15px #ffd700; }
+    .moedas { color: #00ff00; font-size: 40px; font-weight: bold; text-align: center; text-shadow: 2px 2px #000; }
+    h1 { color: #ffd700; text-align: center; font-size: 28px; text-shadow: 0 0 10px #ffd700; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. DATABASE FAMÍLIA ---
+# --- 2. DATABASE COMPLETA (11 PERSONAGENS) ---
 familia = {
-    "Papai": "papai.jpg", "Kamilly": "kamilly.jpg", "Mamãe": "mamae.jpg",
-    "Kauan": "kauan.jpg", "Vovô": "vovo_geraldo.jpg", "Tio": "tio_mk.jpg"
+    "Kamilly": "kamilly.jpg", "Papai Rick": "papai.jpg", "Mamãe": "mamae.jpg",
+    "Kauan": "kauan.jpg", "Vovô Geraldo": "vovo_geraldo.jpg", "Vovô Mário": "vovo_mario.jpg",
+    "Tio MK": "tio_mk.jpg", "Vovó Neusa": "vovo_neusa.jpg", "Padrinho": "tio_padrinho.jpg",
+    "Tio Michel": "tio_michel.jpg", "Vovó Diva": "vova_diva.jpg"
 }
 
 # --- 3. ESTADOS ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["Kamilly"] * 9
 
-# --- 4. MÚSICA DE VEGAS (SÓ ACORDA NO CLIQUE) ---
+# --- 4. PLAYER DE SOM ---
 st.components.v1.html("""
     <audio id="arcade-music" loop autoplay><source src="https://soundhelix.com" type="audio/mp3"></audio>
     <script>document.body.addEventListener('click', function() { document.getElementById('arcade-music').play(); }, {once: true});</script>
 """, height=0)
 
-# --- 5. INTERFACE PRINCIPAL ---
+# --- 5. INTERFACE ---
 st.markdown("<h1>🎰 KAMILLY LUCKY SLOT 🎰</h1>", unsafe_allow_html=True)
 st.markdown(f"<p class='moedas'>💰 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
 
@@ -57,32 +58,32 @@ ps = [cols[i%3].empty() for i in range(9)]
 
 def render(lista):
     for i in range(9):
-        img_path = familia.get(lista[i])
-        if img_path and os.path.exists(img_path):
-            ps[i].image(img_path)
+        nome = lista[i]
+        foto = familia.get(nome)
+        if foto and os.path.exists(foto):
+            ps[i].image(foto)
         else:
-            ps[i].write(f"📸\n{lista[i]}")
+            ps[i].write(f"📸\n{nome}")
 
-# Desenha o estado inicial
 render(st.session_state.grade)
 st.markdown('</div>', unsafe_allow_html=True)
 
 st.write("")
 
-# BOTÃO DE GIRO ÚNICO
+# BOTÃO DE GIRO (COM 30% DE CHANCE)
 if st.button("🔥 GIRAR E GANHAR ($50) 🔥"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
         
-        # Animação de giro rápido
+        # Animação de giro
         for _ in range(8):
             render([random.choice(list(familia.keys())) for _ in range(9)])
             time.sleep(0.06)
         
-        # Lógica de Sorte (30% Chance de Jackpot)
+        # Lógica de Sorte (30%)
         if random.random() < 0.30:
-            vencedor = random.choice(list(familia.keys()))
-            st.session_state.grade = [vencedor] * 9
+            ganhador = random.choice(list(familia.keys()))
+            st.session_state.grade = [ganhador] * 9
             st.session_state.moedas += 3000
             st.balloons()
             st.success(f"💎 JACKPOT! +$3000")
@@ -92,9 +93,8 @@ if st.button("🔥 GIRAR E GANHAR ($50) 🔥"):
         
         st.rerun()
     else:
-        st.error("Moedas insuficientes! Clique no Reboot.")
+        st.error("Sem moedas! Clique abaixo para recarregar.")
 
-# Botão de Reset escondido no final
 if st.button("🔄 RECARREGAR ENERGIA"):
     st.session_state.moedas = 1000
     st.rerun()
