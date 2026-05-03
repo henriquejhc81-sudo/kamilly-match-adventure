@@ -8,133 +8,135 @@ st.set_page_config(page_title="KAMILLY ARCADE 3x2", layout="centered")
 
 # --- 2. BANCO DE DADOS ---
 familia = {
-    "kamilly": ["kamilly.jpg", "💎"],
-    "papai": ["papai.jpg", "💎"],
-    "mamae": ["mamae.jpg", "💎"],
-    "kauan": ["kauan.jpg", "💎"],
-    "vovog": ["vovo_geraldo.jpg", "💎"],
-    "tiomk": ["tio_mk.jpg", "💎"],
-    "vovon": ["vovo_neusa.jpg", "💎"],
-    "vovodiva": ["vova_diva.jpg", "💎"]
+    "kamilly": ["kamilly.jpg", "💎"], "papai": ["papai.jpg", "💎"],
+    "mamae": ["mamae.jpg", "💎"], "kauan": ["kauan.jpg", "💎"],
+    "vovog": ["vovo_geraldo.jpg", "💎"], "tiomk": ["tio_mk.jpg", "💎"],
+    "vovon": ["vovo_neusa.jpg", "💎"], "vovodiva": ["vova_diva.jpg", "💎"]
 }
 
-# --- 3. ESTADOS ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 4. CSS DE EXCELÊNCIA (CORREÇÃO PARA ANDROID) ---
+# --- 3. CSS "BLINDADO" PARA MOBILE ---
 st.markdown("""
     <style>
     .main { background-color: #050a1a; }
     
-    /* FORÇA 3 COLUNAS LADO A LADO NO CELULAR */
-    div[data-testid="column"] {
-        width: 32% !important;
-        flex: 1 1 32% !important;
-        min-width: 32% !important;
+    /* GRADE 3x2 QUE NÃO QUEBRA NUNCA */
+    .arcade-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        grid-template-rows: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        background: #000;
+        border: 5px solid #ffd700;
+        border-radius: 20px;
+        padding: 10px;
+        box-shadow: 0 0 25px #ffd700;
+        max-width: 320px;
+        margin: 10px auto;
     }
-    div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 5px !important;
-        justify-content: center !important;
+
+    .slot-item {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 12px;
+        border: 2px solid gold;
+        object-fit: cover;
     }
-    
-    .arcade-frame {
-        border: 6px solid #ffd700; border-radius: 15px;
-        background: #000; padding: 5px; box-shadow: 0 0 20px #ffd700;
-        max-width: 340px; margin: auto;
-    }
-    
-    img { 
-        border-radius: 10px; border: 2px solid gold; 
-        height: 100px !important; width: 100% !important; object-fit: cover; 
-    }
-    
+
     .slot-reserva {
-        height: 100px; background: #222; border-radius: 10px; border: 1px solid gold;
-        display: flex; align-items: center; justify-content: center; font-size: 35px;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background: #222;
+        border-radius: 12px;
+        border: 2px solid gold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
     }
-    
+
     .moedas-banner {
         background: linear-gradient(90deg, #00ff00, #008000);
-        color: white; padding: 10px; border-radius: 50px;
-        font-size: 28px; font-weight: bold; text-align: center;
-        box-shadow: 0 0 15px #00ff00; margin-bottom: 15px;
+        color: white; padding: 12px; border-radius: 50px;
+        font-size: 30px; font-weight: bold; text-align: center;
+        box-shadow: 0 0 20px #00ff00; max-width: 320px; margin: auto;
     }
-    
+
     .stButton>button {
         background: linear-gradient(to bottom, #ff4b4b, #8b0000) !important;
-        color: white !important; font-size: 22px !important; height: 60px !important;
-        border-radius: 15px !important; border: 2px solid gold !important;
-        box-shadow: 0 5px 0 #5a0000 !important; font-weight: bold !important;
+        color: white !important; font-size: 24px !important; height: 65px !important;
+        border-radius: 20px !important; border: 2px solid gold !important;
+        box-shadow: 0 6px 0 #5a0000 !important; width: 100%; max-width: 320px;
+        margin: 20px auto; display: block;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. FUNÇÕES DE EFEITOS ---
+# --- 4. FUNÇÕES ---
 def tocar_som(tipo):
-    sons = {
-        "giro": "https://soundjay.com",
-        "ganhou": "https://soundjay.com"
-    }
+    sons = {"giro": "https://soundjay.com",
+            "ganhou": "https://soundjay.com"}
     st.components.v1.html(f"<audio autoplay><source src='{sons[tipo]}' type='audio/mp3'></audio>", height=0)
 
-# --- 6. INTERFACE ---
-st.markdown("<h1 style='text-align:center; color:gold; font-size:24px;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
+# --- 5. INTERFACE ---
+st.markdown("<h1 style='text-align:center; color:gold; font-size:26px;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
-caixa_roleta = st.empty()
+container_jogo = st.empty()
 
-def mostrar_roleta(lista_atual):
-    with caixa_roleta.container():
-        st.markdown('<div class="arcade-frame">', unsafe_allow_html=True)
-        for r in range(2): # 2 linhas
-            cols = st.columns(3) # 3 colunas
-            for c in range(3):
-                idx = r * 3 + c
-                nome_p = lista_atual[idx]
-                foto, emoji = familia.get(nome_p, ["", "💎"])
-                
-                if os.path.exists(foto):
-                    cols[c].image(foto, use_container_width=True)
-                else:
-                    cols[c].markdown(f"<div class='slot-reserva'>{emoji}</div>", unsafe_allow_html=True)
+def renderizar_arcade(lista):
+    html_grid = "<div class='arcade-grid'>"
+    for nome in lista:
+        foto, emoji = familia.get(nome, ["", "💎"])
+        # Aqui usamos um truque: se a foto existe, o Streamlit a serve, senão usamos o emoji
+        if os.path.exists(foto):
+            # Para carregar imagem local no HTML do Streamlit é complexo, 
+            # então mantemos a lógica hibrida:
+            html_grid += f"<div class='slot-reserva'><img src='app/static/{foto}' class='slot-item' onerror=\"this.parentElement.innerHTML='{emoji}'\"></div>"
+        else:
+            html_grid += f"<div class='slot-reserva'>{emoji}</div>"
+    html_grid += "</div>"
+    
+    # Para garantir que as fotos apareçam no mobile, usamos o componente de imagem do Streamlit dentro do container
+    with container_jogo.container():
+        st.markdown('<div class="arcade-grid">', unsafe_allow_html=True)
+        cols1 = st.columns(3)
+        cols2 = st.columns(3)
+        for i, col in enumerate(cols1 + cols2):
+            nome = lista[i]
+            foto, emoji = familia.get(nome, ["", "💎"])
+            if os.path.exists(foto):
+                col.image(foto, use_container_width=True)
+            else:
+                col.markdown(f"<div class='slot-reserva'>{emoji}</div>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-mostrar_roleta(st.session_state.grade)
+renderizar_arcade(st.session_state.grade)
 
-# --- 7. BOTÃO DE GIRO ---
-st.write("")
+# --- 6. GIRO ---
 if st.button("🔥 GIRAR ($50) 🔥"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
         tocar_som("giro")
-        
-        # ANIMAÇÃO DE GIRO
         for _ in range(6):
-            grade_vibrando = [random.choice(list(familia.keys())) for _ in range(6)]
-            mostrar_roleta(grade_vibrando)
+            renderizar_arcade([random.choice(list(familia.keys())) for _ in range(6)])
             time.sleep(0.1)
         
-        # RESULTADO FINAL
         if random.random() < 0.35:
             venc = random.choice(list(familia.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2000
-            mostrar_roleta(st.session_state.grade)
+            renderizar_arcade(st.session_state.grade)
             st.balloons()
             tocar_som("ganhou")
-            st.success(f"🏆 JACKPOT! +$2000")
         else:
             st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(6)]
-            mostrar_roleta(st.session_state.grade)
-        
+            renderizar_arcade(st.session_state.grade)
         st.rerun()
-    else:
-        st.error("Sem moedas!")
 
 if st.sidebar.button("🔄 RECARREGAR"):
     st.session_state.moedas = 1000
     st.rerun()
+
