@@ -1,134 +1,110 @@
 import streamlit as st
 import random
 import os
+import time
 
-# --- 1. ENGINE E DESIGN DO EMULADOR ---
-st.set_page_config(page_title="KAMILLY ARCADE", layout="wide", page_icon="🕹️")
+# --- 1. CONFIGURAÇÃO DE DESIGNER ---
+st.set_page_config(page_title="KAMILLY LUCKY WHEEL", layout="wide", page_icon="🍀")
 
 st.markdown("""
     <style>
-    .main { background: #FFEDF6; }
-    .arcade-title { 
-        background: linear-gradient(90deg, #FF1493, #4169E1);
-        padding: 20px; border-radius: 50px; text-align: center;
-        color: white; font-family: 'Comic Sans MS'; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    .main { background: radial-gradient(circle, #1a2a6c, #b21f1f, #fdbb2d); }
+    .status-bar {
+        background: rgba(0,0,0,0.5); border: 3px solid gold;
+        border-radius: 50px; padding: 15px; color: gold;
+        text-align: center; font-size: 25px; font-weight: bold;
+    }
+    .slot-machine {
+        background: #004aad; border: 10px solid #ffd700;
+        border-radius: 30px; padding: 30px; box-shadow: 0 0 50px gold;
     }
     .stButton>button {
-        border-radius: 20px !important; font-weight: bold !important;
-        height: 65px !important; border: 3px solid #FF1493 !important;
-        background: white !important; color: #FF1493 !important;
-        box-shadow: 0 6px 0 #FF1493; transition: 0.1s;
+        height: 80px !important; border-radius: 40px !important;
+        background: linear-gradient(180deg, #ffd700, #b8860b) !important;
+        color: black !important; font-size: 25px !important; border: none !important;
+        box-shadow: 0 8px 0 #664d00;
     }
-    .stButton>button:active { transform: translateY(4px); box-shadow: 0 2px 0 #FF1493; }
-    .coin-slot { font-size: 30px; color: #FFD700; text-align: center; text-shadow: 2px 2px #000; font-weight: bold; }
-    .roleta-img { border: 10px solid #FF1493; border-radius: 50%; box-shadow: 0 0 20px #FF1493; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. BANCO DE DADOS FAMÍLIA ---
+# --- 2. DATABASE ---
 parentes = {
     "Kamilly 👑": "kamilly.jpg", "Papai Rick 🧔": "papai.jpg", "Mamãe 💙": "mamae.jpg",
     "Kauan 🤙": "kauan.jpg", "Vovô G. 🤠": "vovo_geraldo.jpg", "Vovô M. 👨🏻‍🦱": "vovo_mario.jpg",
-    "Tio MK 🍻": "tio_mk.jpg", "Vovó N. 🌸": "vovo_neusa.jpg", "Padrinho 🤟": "tio_padrinho.jpg"
+    "Tio MK 🍻": "tio_mk.jpg", "Vovó N. 🌸": "vovo_neusa.jpg"
 }
 
-# --- 3. ESTADOS DO EMULADOR (MEMÓRIA) ---
+# --- 3. ESTADOS ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-if 'cartucho' not in st.session_state: st.session_state.cartucho = "menu"
-if 'colecao' not in st.session_state: st.session_state.colecao = []
-if 'tabuleiro' not in st.session_state: st.session_state.tabuleiro = random.sample(list(parentes.keys()) * 3, 24)
-if 'slots' not in st.session_state: st.session_state.slots = ["Kamilly 👑"] * 3
+if 'resultado_final' not in st.session_state: st.session_state.resultado_final = ["Kamilly 👑"] * 3
+if 'girando' not in st.session_state: st.session_state.girando = False
 
-# --- 4. SISTEMA DE SOM AUTOMÁTICO ---
+# --- 4. SISTEMA DE SOM ---
 st.components.v1.html("""
-    <audio id="arcade-music" loop autoplay>
+    <audio id="spin-sound" loop>
         <source src="https://soundhelix.com" type="audio/mp3">
     </audio>
     <script>
         document.body.addEventListener('click', function() {
-            document.getElementById('arcade-music').play();
+            var audio = document.getElementById('spin-sound');
+            audio.play();
         }, {once: true});
     </script>
 """, height=0)
 
-# --- 5. OS JOGOS (OS "CARTUCHOS") ---
+# --- 5. INTERFACE ---
+st.markdown("<h1 style='text-align:center; color:gold;'>🍀 ROLETA DA SORTE KAMILLY 🍀</h1>", unsafe_allow_html=True)
+st.markdown(f"<div class='status-bar'>🪙 SALDO: {st.session_state.moedas} MOEDAS</div>", unsafe_allow_html=True)
 
-def menu_inicial():
-    st.markdown("<h1 class='arcade-title'>🕹️ KAMILLY ARCADE EMULATOR 🕹️</h1>", unsafe_allow_html=True)
-    st.write(f"<p class='coin-slot'>💰 MOEDAS DISPONÍVEIS: {st.session_state.moedas}</p>", unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.write("### 🧩 MUNDO MÁGICO")
-        st.write("Combine 3 fotos iguais para ganhar moedas!")
-        if st.button("INSERIR CRÉDITO 📥", key="go_m3"): st.session_state.cartucho = "match3"; st.rerun()
-    with col2:
-        st.write("### 🎰 FAMILY SLOTS")
-        st.write("Tente a sorte no caça-níquel da família!")
-        if st.button("INSERIR CRÉDITO 📥", key="go_slots"): st.session_state.cartucho = "slots"; st.rerun()
-    with col3:
-        st.write("### 🎠 ROLETA DA SORTE")
-        st.write("Gire a roleta e ganhe prêmios!")
-        if st.button("INSERIR CRÉDITO 📥", key="go_roleta"): st.session_state.cartucho = "roleta"; st.rerun()
+# ESPAÇO DA ROLETA (3 Janelas)
+st.markdown('<div class="slot-machine">', unsafe_allow_html=True)
+col1, col2, col3 = st.columns(3)
 
-def jogo_match3():
-    st.write("<h1>💎 MUNDO MÁGICO (MATCH 3)</h1>", unsafe_allow_html=True)
-    cols_b = st.columns(8)
-    for i in range(8):
-        with cols_b[i]:
-            if i < len(st.session_state.colecao):
-                p = st.session_state.colecao[i]
-                img = parentes.get(p)
-                if img and os.path.exists(img): st.image(img, width=70)
-    
-    st.divider()
-    grid = st.columns(6)
-    for idx, peca in enumerate(st.session_state.tabuleiro):
-        if peca != "vazio":
-            with grid[idx % 6]:
-                img_p = parentes.get(peca)
-                if img_p and os.path.exists(img_p): st.image(img_p, use_column_width=True)
-                if st.button("PEGAR", key=f"m3_{idx}"):
-                    st.session_state.colecao.append(peca)
-                    st.session_state.tabuleiro[idx] = "vazio"
-                    for item in set(st.session_state.colecao):
-                        if st.session_state.colecao.count(item) >= 3:
-                            st.session_state.colecao = [x for x in st.session_state.colecao if x != item]
-                            st.session_state.moedas += 100
-                            st.balloons()
-                    st.rerun()
+# Lógica de Animação de Giro
+placeholder1 = col1.empty()
+placeholder2 = col2.empty()
+placeholder3 = col3.empty()
 
-def jogo_slots():
-    st.write("<h1>🎰 FAMILY SLOTS VIP</h1>", unsafe_allow_html=True)
-    st.write(f"<p class='coin-slot'>💰 SALDO: {st.session_state.moedas}</p>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
-    for i, res in enumerate(st.session_state.slots):
-        with [c1, c2, c3][i]:
-            img = parentes.get(res)
-            if img and os.path.exists(img): st.image(img, use_column_width=True)
-            else: st.write(f"## {res}")
-            
-    if st.button("🎰 GIRAR (50 MOEDAS)"):
-        if st.session_state.moedas >= 50:
-            st.session_state.moedas -= 50
-            st.session_state.slots = [random.choice(list(parentes.keys())) for _ in range(3)]
-            if len(set(st.session_state.slots)) == 1:
-                st.session_state.moedas += 1000
-                st.snow()
-            st.rerun()
+def exibir_fotos(fotos, containers):
+    for i, foto_nome in enumerate(fotos):
+        img_path = parentes.get(foto_nome)
+        with containers[i]:
+            if img_path and os.path.exists(img_path):
+                st.image(img_path, use_column_width=True)
+            else:
+                st.markdown(f"<h1 style='text-align:center; color:white;'>{foto_nome[-1]}</h1>", unsafe_allow_html=True)
 
-# --- 6. EXECUÇÃO DO CARTUCHO ATUAL ---
-with st.sidebar:
-    st.write(f"## 🎮 KAMILLY ARCADE")
-    if st.button("🏠 MENU PRINCIPAL"): st.session_state.cartucho = "menu"
-    st.divider()
-    st.write(f"🪙 MOEDAS: {st.session_state.moedas}")
-    if st.button("🔄 RESET CONSOLE"):
-        st.session_state.moedas = 1000
-        st.session_state.cartucho = "menu"
+# Mostra o resultado atual (parado)
+exibir_fotos(st.session_state.resultado_final, [placeholder1, placeholder2, placeholder3])
+st.markdown('</div>', unsafe_allow_html=True)
+
+st.write("")
+
+# BOTÃO DE GIRAR
+if st.button("🎰 PUXAR ALAVANCA (50 Moedas) 🎰"):
+    if st.session_state.moedas >= 50:
+        st.session_state.moedas -= 50
+        
+        # EFEITO DE GIRO (Animação rápida)
+        for _ in range(10): # Gira 10 vezes rápido
+            temp_res = [random.choice(list(parentes.keys())) for _ in range(3)]
+            exibir_fotos(temp_res, [placeholder1, placeholder2, placeholder3])
+            time.sleep(0.1) # Velocidade do giro
+        
+        # RESULTADO FINAL
+        st.session_state.resultado_final = [random.choice(list(parentes.keys())) for _ in range(3)]
+        
+        # Verifica vitória
+        if len(set(st.session_state.resultado_final)) == 1:
+            st.session_state.moedas += 1000
+            st.balloons()
+            st.success("🔥 JACKPOT! VOCÊ GANHOU 1000 MOEDAS! 🔥")
+        
         st.rerun()
+    else:
+        st.error("Moedas insuficientes! Clique no Reset.")
 
-if st.session_state.cartucho == "menu": menu_inicial()
-elif st.session_state.cartucho == "match3": jogo_match3()
-elif st.session_state.cartucho == "slots": jogo_slots()
-elif st.session_state.cartucho == "roleta": st.write("### 🎠 Roleta em construção para amanhã!")
+with st.sidebar:
+    if st.button("🔄 RESETAR SALDO"):
+        st.session_state.moedas = 1000
+        st.rerun()
