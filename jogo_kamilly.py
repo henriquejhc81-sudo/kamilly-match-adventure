@@ -4,7 +4,7 @@ import time
 import os
 
 # --- 1. CONFIGURAÇÃO ---
-st.set_page_config(page_title="KAMILLY ARCADE 3x3", layout="centered", page_icon="🎰")
+st.set_page_config(page_title="KAMILLY ARCADE 2x3", layout="centered", page_icon="🎰")
 
 # --- 2. BANCO DE DADOS COMPLETO ---
 familia = {
@@ -23,18 +23,19 @@ familia = {
 
 # --- 3. ESTADOS ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 9
+# Grade agora com 6 espaços para o formato 2x3
+if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 4. CSS PARA FORMATO 3x3 COLADO (IGUAL À FOTO) ---
+# --- 4. CSS PARA FORMATO 2x3 COLADO (ESTILO AZUL) ---
 st.markdown("""
     <style>
     .main { background-color: #050a1a; }
     
-    /* FORÇA 3 COLUNAS LADO A LADO SEM ESPAÇO (GAP ZERO) */
+    /* FORÇA 2 COLUNAS LADO A LADO SEM ESPAÇO (GAP ZERO) */
     div[data-testid="column"] {
-        width: 33.33% !important;
-        flex: 1 1 33.33% !important;
-        min-width: 33.33% !important;
+        width: 50% !important;
+        flex: 1 1 50% !important;
+        min-width: 50% !important;
         padding: 0px !important;
         margin: 0px !important;
     }
@@ -43,45 +44,48 @@ st.markdown("""
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
-        gap: 0px !important; /* IGUAL À FOTO: COLADO */
+        gap: 0px !important;
         justify-content: center !important;
     }
 
     .arcade-frame {
-        border: 10px solid #0055ff; /* Azul igual à foto */
+        border: 10px solid #0055ff; /* Moldura azul da foto */
         border-radius: 25px;
         background: #0a2a7a;
         padding: 0px; 
         box-shadow: 0 0 40px #0055ff;
-        max-width: 350px; 
+        max-width: 300px; /* Ajustado para 2 colunas */
         margin: auto;
         overflow: hidden;
     }
 
     img { 
-        border: 1px solid rgba(255, 215, 0, 0.3); /* Linha fina entre slots */
-        height: 110px !important; 
+        border: 1px solid rgba(255, 215, 0, 0.2); 
+        height: 140px !important; /* Mais alto para o 2x3 */
         width: 100% !important; 
         object-fit: cover; 
     }
     
     .slot-reserva {
-        height: 110px; background: #0a2a7a; border: 1px solid rgba(255, 215, 0, 0.3);
-        display: flex; align-items: center; justify-content: center; font-size: 40px;
+        height: 140px; background: #0a2a7a; border: 1px solid rgba(255, 215, 0, 0.2);
+        display: flex; align-items: center; justify-content: center; font-size: 45px;
     }
     
     .moedas-banner {
         background: linear-gradient(90deg, #00ff00, #008000);
         color: white; padding: 12px; border-radius: 50px;
         font-size: 32px; font-weight: bold; text-align: center;
-        box-shadow: 0 0 20px #00ff00; max-width: 300px; margin: 0 auto 20px auto;
+        box-shadow: 0 0 20px #00ff00; max-width: 280px; margin: 0 auto 20px auto;
     }
     
+    /* BOTÃO CIRCULAR IGUAL À FOTO */
     .stButton>button {
-        background: radial-gradient(circle, #666, #333) !important; /* Botão cinza igual à foto */
-        color: white !important; font-size: 25px !important; height: 70px !important; width: 70px !important;
+        background: radial-gradient(circle, #666, #333) !important;
+        color: white !important; font-size: 35px !important; 
+        height: 80px !important; width: 80px !important;
         border-radius: 50% !important; border: 4px solid #ccc !important;
         margin: 20px auto !important; display: block !important;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -95,7 +99,7 @@ def tocar_som(tipo):
     st.components.v1.html(f"<audio autoplay><source src='{sons[tipo]}' type='audio/mp3'></audio>", height=0)
 
 # --- 6. INTERFACE ---
-st.markdown("<h1 style='text-align:center; color:#0055ff; font-size:28px;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; color:#0055ff; font-size:26px;'>🎰 KAMILLY JACKPOT 🎰</h1>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
 caixa_roleta = st.empty()
@@ -103,11 +107,11 @@ caixa_roleta = st.empty()
 def mostrar_roleta(lista_atual):
     with caixa_roleta.container():
         st.markdown('<div class="arcade-frame">', unsafe_allow_html=True)
-        # 3 linhas de 3 colunas (3x3 igual à foto)
+        # 3 linhas de 2 colunas (Formato 2x3)
         for r in range(3):
-            cols = st.columns(3)
-            for c in range(3):
-                idx = r * 3 + c
+            cols = st.columns(2)
+            for c in range(2):
+                idx = r * 2 + c
                 nome_p = lista_atual[idx]
                 foto, emoji = familia.get(nome_p, ["", "💎"])
                 
@@ -119,29 +123,30 @@ def mostrar_roleta(lista_atual):
 
 mostrar_roleta(st.session_state.grade)
 
-# --- 7. BOTÃO DE GIRO (ESTILO BOTÃO CINZA DA FOTO) ---
+# --- 7. BOTÃO DE GIRO ---
 st.write("")
 if st.button("↻"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
         tocar_som("giro")
         
-        # ANIMAÇÃO
+        # ANIMAÇÃO DE GIRO
         for _ in range(6):
-            grade_vibrando = [random.choice(list(familia.keys())) for _ in range(9)]
+            grade_vibrando = [random.choice(list(familia.keys())) for _ in range(6)]
             mostrar_roleta(grade_vibrando)
             time.sleep(0.1)
         
-        # RESULTADO
+        # RESULTADO FINAL
         if random.random() < 0.35:
             venc = random.choice(list(familia.keys()))
-            st.session_state.grade = [venc] * 9
-            st.session_state.moedas += 3000
+            st.session_state.grade = [venc] * 6
+            st.session_state.moedas += 2500
             mostrar_roleta(st.session_state.grade)
             st.balloons()
             tocar_som("ganhou")
+            st.success(f"🏆 JACKPOT 2x3! +$2500")
         else:
-            st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
+            st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(6)]
             mostrar_roleta(st.session_state.grade)
         
         st.rerun()
