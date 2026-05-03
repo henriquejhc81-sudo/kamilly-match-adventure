@@ -3,23 +3,31 @@ import random
 import os
 import time
 
-# --- 1. DESIGN DE ALTA PRECISÃO COM EFEITO DE VITÓRIA ---
+# --- 1. DESIGN E ANIMAÇÕES ESPECIAIS ---
 st.set_page_config(page_title="KAMILLY LUCKY SLOT", layout="centered", page_icon="🎰")
 
-# Variável para controlar o brilho da moldura se ganhar
 venceu = st.session_state.get('venceu', False)
 border_color = "#00ff00" if venceu else "#ffd700"
-shadow_color = "0 0 50px #00ff00" if venceu else "0 0 30px #ffd700"
+shadow_color = "0 0 60px #00ff00" if venceu else "0 0 30px #ffd700"
 
 st.markdown(f"""
     <style>
     .main {{ background: #000b1e; }}
     .console-box {{
-        border: 8px solid {border_color}; border-radius: 20px;
+        border: 8px solid {border_color}; border-radius: 25px;
         background: rgba(0, 0, 0, 0.9); padding: 10px;
         box-shadow: {shadow_color}; text-align: center;
         width: 360px; margin: auto;
-        transition: 0.5s;
+        transition: 0.3s;
+        animation: {'shake 0.5s' if venceu else 'none'};
+    }}
+    @keyframes shake {{
+        0% {{ transform: translate(1px, 1px) rotate(0deg); }}
+        10% {{ transform: translate(-1px, -2px) rotate(-1deg); }}
+        20% {{ transform: translate(-3px, 0px) rotate(1deg); }}
+        30% {{ transform: translate(3px, 2px) rotate(0deg); }}
+        40% {{ transform: translate(1px, -1px) rotate(1deg); }}
+        50% {{ transform: translate(-1px, 2px) rotate(-1deg); }}
     }}
     img {{ 
         border-radius: 8px; border: 2px solid gold; 
@@ -29,13 +37,13 @@ st.markdown(f"""
     .stButton>button {{
         background: radial-gradient(circle, #ffd700, #b8860b) !important;
         color: black !important; border-radius: 50px !important;
-        font-weight: bold !important; height: 60px !important; width: 100% !important;
-        font-size: 20px !important; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        margin-top: 15px !important;
+        font-weight: bold !important; height: 65px !important; width: 100% !important;
+        font-size: 22px !important; box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        margin-top: 15px !important; border: 2px solid white !important;
     }}
-    .moedas {{ color: #00ff00; font-size: 35px; font-weight: bold; text-align: center; }}
-    h1 {{ color: #ffd700; text-align: center; font-size: 24px; text-shadow: 0 0 10px #ffd700; }}
-    [data-testid="column"] {{ padding: 2px !important; flex: 1 1 0% !important; min-width: 0px !important; }}
+    .moedas {{ color: #00ff00; font-size: 40px; font-weight: bold; text-align: center; }}
+    h1 {{ color: #ffd700; text-align: center; font-size: 26px; text-shadow: 0 0 10px #ffd700; }}
+    [data-testid="column"] {{ padding: 2px !important; }}
     div[data-testid="stHorizontalBlock"] {{ gap: 0px !important; justify-content: center !important; }}
     </style>
     """, unsafe_allow_html=True)
@@ -53,7 +61,7 @@ if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["Kamilly"] * 9
 if 'venceu' not in st.session_state: st.session_state.venceu = False
 
-# --- 4. PLAYER DE SOM DUPLO (FUNDO + VITÓRIA) ---
+# --- 4. PLAYER DE SOM E EFEITOS ---
 st.components.v1.html(f"""
     <audio id="arcade-music" loop autoplay><source src="https://soundhelix.com" type="audio/mp3"></audio>
     <audio id="win-sound"><source src="https://myinstants.com" type="audio/mp3"></audio>
@@ -69,10 +77,9 @@ st.components.v1.html(f"""
 """, height=0)
 
 # --- 5. INTERFACE ---
-st.markdown("<h1>🎰 KAMILLY LUCKY SLOT 🎰</h1>", unsafe_allow_html=True)
+st.markdown("<h1>🎰 FESTA DO JACKPOT 🎰</h1>", unsafe_allow_html=True)
 st.markdown(f"<p class='moedas'>💰 ${st.session_state.moedas}</p>", unsafe_allow_html=True)
 
-# MOLDURA DO JOGO
 st.markdown('<div class="console-box">', unsafe_allow_html=True)
 def render_compacto(lista):
     for row in range(3):
@@ -88,19 +95,20 @@ def render_compacto(lista):
 render_compacto(st.session_state.grade)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- 6. LÓGICA DO GIRO ---
+# --- 6. LÓGICA DE GIRO COM BALÕES ---
 if st.button("🔥 GIRAR E GANHAR ($50) 🔥"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        st.session_state.venceu = False # Reseta estado de vitória
+        st.session_state.venceu = False
         
         # Sorteio (30% de chance)
         if random.random() < 0.30:
             vencedor = random.choice(list(familia.keys()))
             st.session_state.grade = [vencedor] * 9
             st.session_state.moedas += 3000
-            st.session_state.venceu = True # Ativa som e visual de vitória
-            st.balloons()
+            st.session_state.venceu = True
+            st.balloons() # EXPLOSÃO DE BALÕES! 🎈
+            st.snow()     # EFEITO DE NEVE/CONFETE! ❄️
         else:
             st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(9)]
         
