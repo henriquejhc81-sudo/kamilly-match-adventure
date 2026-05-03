@@ -2,133 +2,133 @@ import streamlit as st
 import random
 import os
 
-# --- 1. CONFIGURAÇÃO ---
-st.set_page_config(page_title="KAMILLY FUN HOUSE", layout="wide", page_icon="🧸")
+# --- 1. ENGINE E DESIGN DO EMULADOR ---
+st.set_page_config(page_title="KAMILLY ARCADE", layout="wide", page_icon="🕹️")
 
-# --- 2. CSS INFANTIL MÁGICO ---
 st.markdown("""
     <style>
-    .main { background: #FFEDF6; } /* Rosa Bebê */
+    .main { background: #FFEDF6; }
+    .arcade-title { 
+        background: linear-gradient(90deg, #FF1493, #4169E1);
+        padding: 20px; border-radius: 50px; text-align: center;
+        color: white; font-family: 'Comic Sans MS'; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
     .stButton>button {
-        border-radius: 25px !important; font-weight: bold !important;
-        height: 60px !important; border: 3px solid #4169E1 !important;
-        background: white !important; color: #4169E1 !important;
-        box-shadow: 0 5px 0 #4169E1;
+        border-radius: 20px !important; font-weight: bold !important;
+        height: 65px !important; border: 3px solid #FF1493 !important;
+        background: white !important; color: #FF1493 !important;
+        box-shadow: 0 6px 0 #FF1493; transition: 0.1s;
     }
-    .roleta-box {
-        background: white; border: 8px solid #FF1493; border-radius: 50%;
-        padding: 20px; text-align: center; box-shadow: 0 0 20px #FF1493;
-        width: 250px; height: 250px; display: flex; align-items: center; justify-content: center;
-    }
-    h1 { color: #FF1493; text-align: center; font-family: 'Comic Sans MS'; text-shadow: 2px 2px #fff; }
-    .status { font-size: 25px; color: #4169E1; text-align: center; font-weight: bold; }
+    .stButton>button:active { transform: translateY(4px); box-shadow: 0 2px 0 #FF1493; }
+    .coin-slot { font-size: 30px; color: #FFD700; text-align: center; text-shadow: 2px 2px #000; font-weight: bold; }
+    .roleta-img { border: 10px solid #FF1493; border-radius: 50%; box-shadow: 0 0 20px #FF1493; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. DATABASE ---
-familia = {
-    "Papai Rick": "papai.jpg", "Kamilly": "kamilly.jpg", 
-    "Mamãe": "mamae.jpg", "Kauan": "kauan.jpg",
-    "Vovô G.": "vovo_geraldo.jpg", "Vovô M.": "vovo_mario.jpg",
-    "Tio MK": "tio_mk.jpg", "Vovó N.": "vovo_neusa.jpg"
+# --- 2. BANCO DE DADOS FAMÍLIA ---
+parentes = {
+    "Kamilly 👑": "kamilly.jpg", "Papai Rick 🧔": "papai.jpg", "Mamãe 💙": "mamae.jpg",
+    "Kauan 🤙": "kauan.jpg", "Vovô G. 🤠": "vovo_geraldo.jpg", "Vovô M. 👨🏻‍🦱": "vovo_mario.jpg",
+    "Tio MK 🍻": "tio_mk.jpg", "Vovó N. 🌸": "vovo_neusa.jpg", "Padrinho 🤟": "tio_padrinho.jpg"
 }
 
-# --- 4. ESTADO DO JOGO ---
+# --- 3. ESTADOS DO EMULADOR (MEMÓRIA) ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-if 'jogo' not in st.session_state: st.session_state.jogo = "menu"
-if 'roleta_res' not in st.session_state: st.session_state.roleta_res = ["Kamilly", "Kamilly", "Kamilly"]
+if 'cartucho' not in st.session_state: st.session_state.cartucho = "menu"
+if 'colecao' not in st.session_state: st.session_state.colecao = []
+if 'tabuleiro' not in st.session_state: st.session_state.tabuleiro = random.sample(list(parentes.keys()) * 3, 24)
+if 'slots' not in st.session_state: st.session_state.slots = ["Kamilly 👑"] * 3
 
-# --- 5. MÚSICA AUTOMÁTICA (FORÇADA) ---
+# --- 4. SISTEMA DE SOM AUTOMÁTICO ---
 st.components.v1.html("""
-    <audio id="audio-tag" loop autoplay>
+    <audio id="arcade-music" loop autoplay>
         <source src="https://soundhelix.com" type="audio/mp3">
     </audio>
     <script>
         document.body.addEventListener('click', function() {
-            var audio = document.getElementById('audio-tag');
-            audio.play();
+            document.getElementById('arcade-music').play();
         }, {once: true});
     </script>
 """, height=0)
 
-# --- 6. FUNÇÕES DOS JOGOS ---
+# --- 5. OS JOGOS (OS "CARTUCHOS") ---
 
-def caca_familia():
-    st.write("<h1>🎠 ROLETA DA FAMÍLIA 🎠</h1>", unsafe_allow_html=True)
-    st.write(f'<div class="status">🪙 MOEDAS: {st.session_state.moedas}</div>', unsafe_allow_html=True)
+def menu_inicial():
+    st.markdown("<h1 class='arcade-title'>🕹️ KAMILLY ARCADE EMULATOR 🕹️</h1>", unsafe_allow_html=True)
+    st.write(f"<p class='coin-slot'>💰 MOEDAS DISPONÍVEIS: {st.session_state.moedas}</p>", unsafe_allow_html=True)
     
-    c1, c2, c3 = st.columns(3)
-    res = st.session_state.roleta_res
-    
-    for i, nome in enumerate(res):
-        with [c1, c2, c3][i]:
-            st.markdown('<center><div class="roleta-box">', unsafe_allow_html=True)
-            img = familia.get(nome)
-            if img and os.path.exists(img): st.image(img, width=150)
-            else: st.write(f"## {nome}")
-            st.markdown('</div></center>', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.write("### 🧩 MUNDO MÁGICO")
+        st.write("Combine 3 fotos iguais para ganhar moedas!")
+        if st.button("INSERIR CRÉDITO 📥", key="go_m3"): st.session_state.cartucho = "match3"; st.rerun()
+    with col2:
+        st.write("### 🎰 FAMILY SLOTS")
+        st.write("Tente a sorte no caça-níquel da família!")
+        if st.button("INSERIR CRÉDITO 📥", key="go_slots"): st.session_state.cartucho = "slots"; st.rerun()
+    with col3:
+        st.write("### 🎠 ROLETA DA SORTE")
+        st.write("Gire a roleta e ganhe prêmios!")
+        if st.button("INSERIR CRÉDITO 📥", key="go_roleta"): st.session_state.cartucho = "roleta"; st.rerun()
 
-    st.write("")
-    if st.button("🎰 GIRAR ROLETA (20 Moedas)"):
-        if st.session_state.moedas >= 20:
-            st.session_state.moedas -= 20
-            st.session_state.roleta_res = [random.choice(list(familia.keys())) for _ in range(3)]
-            if len(set(st.session_state.roleta_res)) == 1:
-                st.session_state.moedas += 500
-                st.balloons()
-                st.success("UAU! TRIO IGUAL!")
-            st.rerun()
-
-def match_familia():
-    st.write("<h1>🧩 COMBINAÇÃO MÁGICA </h1>", unsafe_allow_html=True)
-    if 'tab_m3' not in st.session_state: 
-        st.session_state.tab_m3 = random.sample(list(familia.keys()) * 3, 24)
-        st.session_state.barrinha = []
-    
-    # Barra de coleção
+def jogo_match3():
+    st.write("<h1>💎 MUNDO MÁGICO (MATCH 3)</h1>", unsafe_allow_html=True)
     cols_b = st.columns(8)
     for i in range(8):
         with cols_b[i]:
-            if i < len(st.session_state.barrinha):
-                p = st.session_state.barrinha[i]
-                if os.path.exists(familia[p]): st.image(familia[p], width=60)
+            if i < len(st.session_state.colecao):
+                p = st.session_state.colecao[i]
+                img = parentes.get(p)
+                if img and os.path.exists(img): st.image(img, width=70)
     
     st.divider()
     grid = st.columns(6)
-    for idx, peca in enumerate(st.session_state.tab_m3):
+    for idx, peca in enumerate(st.session_state.tabuleiro):
         if peca != "vazio":
             with grid[idx % 6]:
-                if os.path.exists(familia[peca]): st.image(familia[peca], use_column_width=True)
+                img_p = parentes.get(peca)
+                if img_p and os.path.exists(img_p): st.image(img_p, use_column_width=True)
                 if st.button("PEGAR", key=f"m3_{idx}"):
-                    st.session_state.barrinha.append(peca)
-                    st.session_state.tab_m3[idx] = "vazio"
-                    # Lógica Match 3
-                    for p in set(st.session_state.barrinha):
-                        if st.session_state.barrinha.count(p) >= 3:
-                            st.session_state.barrinha = [x for x in st.session_state.barrinha if x != p]
+                    st.session_state.colecao.append(peca)
+                    st.session_state.tabuleiro[idx] = "vazio"
+                    for item in set(st.session_state.colecao):
+                        if st.session_state.colecao.count(item) >= 3:
+                            st.session_state.colecao = [x for x in st.session_state.colecao if x != item]
                             st.session_state.moedas += 100
-                            st.snow()
+                            st.balloons()
                     st.rerun()
 
-# --- 7. NAVEGAÇÃO ---
+def jogo_slots():
+    st.write("<h1>🎰 FAMILY SLOTS VIP</h1>", unsafe_allow_html=True)
+    st.write(f"<p class='coin-slot'>💰 SALDO: {st.session_state.moedas}</p>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    for i, res in enumerate(st.session_state.slots):
+        with [c1, c2, c3][i]:
+            img = parentes.get(res)
+            if img and os.path.exists(img): st.image(img, use_column_width=True)
+            else: st.write(f"## {res}")
+            
+    if st.button("🎰 GIRAR (50 MOEDAS)"):
+        if st.session_state.moedas >= 50:
+            st.session_state.moedas -= 50
+            st.session_state.slots = [random.choice(list(parentes.keys())) for _ in range(3)]
+            if len(set(st.session_state.slots)) == 1:
+                st.session_state.moedas += 1000
+                st.snow()
+            st.rerun()
+
+# --- 6. EXECUÇÃO DO CARTUCHO ATUAL ---
 with st.sidebar:
-    st.title("🎡 MENU DA KAMILLY")
-    if st.button("🏠 PÁGINA INICIAL"): st.session_state.jogo = "menu"
-    if st.button("🎠 ROLETA FAMÍLIA"): st.session_state.jogo = "roleta"
-    if st.button("🧩 COMBINAÇÃO"): st.session_state.jogo = "match"
-    if st.button("🔄 RECOMEÇAR TUDO"):
+    st.write(f"## 🎮 KAMILLY ARCADE")
+    if st.button("🏠 MENU PRINCIPAL"): st.session_state.cartucho = "menu"
+    st.divider()
+    st.write(f"🪙 MOEDAS: {st.session_state.moedas}")
+    if st.button("🔄 RESET CONSOLE"):
         st.session_state.moedas = 1000
-        st.session_state.jogo = "menu"
+        st.session_state.cartucho = "menu"
         st.rerun()
 
-if st.session_state.jogo == "menu":
-    st.write("<h1>🧸 BEM-VINDA AO SEU MUNDO, KAMILLY! 🧸</h1>", unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("JOGAR ROLETA 🎠"): st.session_state.jogo = "roleta"; st.rerun()
-    with col2:
-        if st.button("JOGAR COMBINAÇÃO 🧩"): st.session_state.jogo = "match"; st.rerun()
-elif st.session_state.jogo == "roleta":
-    caca_familia()
-elif st.session_state.jogo == "match":
-    match_familia()
+if st.session_state.cartucho == "menu": menu_inicial()
+elif st.session_state.cartucho == "match3": jogo_match3()
+elif st.session_state.cartucho == "slots": jogo_slots()
+elif st.session_state.cartucho == "roleta": st.write("### 🎠 Roleta em construção para amanhã!")
