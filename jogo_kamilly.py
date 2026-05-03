@@ -3,7 +3,7 @@ import random
 import os
 import time
 
-# --- 1. CONFIGURAÇÃO SUPER COMPACTA ---
+# --- 1. CONFIGURAÇÃO ---
 st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🕹️")
 
 st.markdown("""
@@ -23,7 +23,6 @@ st.markdown("""
         background: linear-gradient(180deg, #ffd700, #b8860b) !important;
         color: black !important; border-radius: 50px !important;
         font-weight: bold !important; height: 50px !important; width: 100% !important;
-        box-shadow: 0 4px 0 #664d00;
     }
     .moedas { color: #00ff00; font-size: 28px; font-weight: bold; text-align: center; }
     h1 { color: #ffd700; text-align: center; font-size: 20px; text-shadow: 2px 2px #000; }
@@ -41,7 +40,7 @@ familia = {
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = random.sample(list(familia.keys()) * 2, 9)
 
-# --- 4. PLAYER DE SOM AUTOMÁTICO ---
+# --- 4. PLAYER DE SOM ---
 st.components.v1.html("""
     <audio id="arcade-sound" loop autoplay><source src="https://soundhelix.com" type="audio/mp3"></audio>
     <script>document.body.addEventListener('click', function() { document.getElementById('arcade-sound').play(); }, {once: true});</script>
@@ -71,8 +70,6 @@ st.write("")
 if st.button("🔥 GIRAR ROLETA ($50)"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        
-        # Giro rápido
         for _ in range(8):
             temp = [random.choice(list(familia.keys())) for _ in range(9)]
             render(temp)
@@ -82,14 +79,16 @@ if st.button("🔥 GIRAR ROLETA ($50)"):
         st.session_state.grade = final
         render(final)
 
-        # LÓGICA DE PREMIAÇÃO (FIXADA)
+        # LÓGICA DE PREMIAÇÃO (NOVA E BLINDADA)
         ganhou = False
-        # Checa linhas: 0,1,2 | 3,4,5 | 6,7,8
-        for i in:
-            if final[i] == final[i+1] == final[i+2]: ganhou = True
-        # Checa colunas: 0,3,6 | 1,4,7 | 2,5,8
-        for i in:
-            if final[i] == final[i+3] == final[i+6]: ganhou = True
+        # Linhas
+        if final[0] == final[1] == final: ganhou = True
+        if final[3] == final[4] == final: ganhou = True
+        if final[6] == final[7] == final: ganhou = True
+        # Colunas
+        if final[0] == final[3] == final: ganhou = True
+        if final[1] == final[4] == final: ganhou = True
+        if final[2] == final[5] == final: ganhou = True
         
         if ganhou:
             st.session_state.moedas += 1000
