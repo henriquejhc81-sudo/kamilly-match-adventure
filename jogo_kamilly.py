@@ -3,49 +3,40 @@ import random
 import os
 import time
 
-# --- 1. CONFIGURAÇÃO DE DESIGN (ESTILO IMAGEM) ---
-st.set_page_config(page_title="KAMILLY LUCKY SLOT", layout="wide")
+# --- 1. CONFIGURAÇÃO DE DESIGN (ESTILO AZUL ROYAL) ---
+st.set_page_config(page_title="KAMILLY LUCKY SLOT", layout="wide", page_icon="💎")
 
 st.markdown("""
     <style>
-    /* Fundo Azul Royal da Imagem */
-    .main { background: linear-gradient(180deg, #0056ff 0%, #0033aa 100%); }
+    .main { background: linear-gradient(180deg, #0056ff 0%, #002288 100%); }
     
     /* Moldura Principal do Jogo */
     .slot-frame {
-        border: 10px solid #4eb4ff;
-        border-radius: 30px;
-        background: #004aad;
-        padding: 20px;
-        box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 0 30px rgba(78, 180, 255, 0.5);
-        max-width: 700px;
+        border: 8px solid #4eb4ff;
+        border-radius: 25px;
+        background: rgba(0, 74, 173, 0.8);
+        padding: 15px;
+        box-shadow: 0 0 30px rgba(78, 180, 255, 0.4);
+        max-width: 600px;
         margin: auto;
     }
     
-    /* Botão Circular Central (Igual à Foto) */
+    /* Botão Circular Centralizado (IDÊNTICO À FOTO) */
     .stButton>button {
-        background: radial-gradient(circle, #888 0%, #333 100%) !important;
+        background: radial-gradient(circle, #777 0%, #222 100%) !important;
         color: white !important;
-        border: 4px solid #fff !important;
+        border: 3px solid #fff !important;
         border-radius: 50% !important;
-        width: 100px !important;
-        height: 100px !important;
-        font-size: 40px !important;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.4) !important;
-        margin-top: 20px !important;
-        transition: 0.2s;
+        width: 90px !important;
+        height: 90px !important;
+        font-size: 35px !important;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.5) !important;
+        transition: 0.1s;
+        margin-top: 15px !important;
     }
-    .stButton>button:active { transform: scale(0.9) translateY(5px); }
+    .stButton>button:active { transform: scale(0.9) translateY(4px); }
 
-    /* Estilo das Cartas (Gelo/Azul) */
-    .item-box {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        border: 2px solid rgba(255,255,255,0.3);
-        margin: 5px;
-    }
-    
-    h1, h3 { color: white; text-align: center; font-family: 'Arial Rounded MT Bold'; }
+    h1, h3 { color: white; text-align: center; font-family: 'Arial Rounded MT Bold'; text-shadow: 2px 2px 4px #000; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -77,7 +68,7 @@ st.components.v1.html("""
 st.write("### 💎 KAMILLY LUCKY SLOT 💎")
 st.write(f"### <center>🪙 MOEDAS: {st.session_state.moedas}</center>", unsafe_allow_html=True)
 
-# MOLDURA AZUL (TABULEIRO 3x3)
+# MOLDURA AZUL (3x3 CENTRALIZADO)
 st.markdown('<div class="slot-frame">', unsafe_allow_html=True)
 col1, col2, col3 = st.columns(3)
 p = [col1.empty(), col2.empty(), col3.empty(), 
@@ -89,22 +80,23 @@ def desenhar(lista):
         with p[i]:
             img = parentes.get(lista[i])
             if img and os.path.exists(img):
-                st.image(img, use_column_width=True)
+                st.image(img, width=140) # Imagem menor para não precisar de rolagem
             else:
-                st.markdown(f"<div class='item-box'><h2 style='text-align:center;'>{lista[i][0]}</h2></div>", unsafe_allow_html=True)
+                st.write(f"### {lista[i]}")
 
 desenhar(st.session_state.grade)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# BOTÃO DE GIRO CENTRALIZADO
-_, btn_col, _ = st.columns()
-with btn_col:
-    if st.button("🔄"):
+# BOTÃO DE GIRO CENTRALIZADO (CORRIGIDO)
+# Criamos 3 colunas e usamos a do meio (índice 1) para o botão
+c1, c2, c3 = st.columns() 
+with c2:
+    if st.button("🔄"): # Botão centralizado com ícone de giro
         if st.session_state.moedas >= 50:
             st.session_state.moedas -= 50
             
             # ANIMAÇÃO DE GIRO RÁPIDO
-            for _ in range(12):
+            for _ in range(10):
                 temp = [random.choice(list(parentes.keys())) for _ in range(9)]
                 desenhar(temp)
                 time.sleep(0.06)
@@ -113,16 +105,16 @@ with btn_col:
             st.session_state.grade = [random.choice(list(parentes.keys())) for _ in range(9)]
             desenhar(st.session_state.grade)
             
-            # Checar Prêmio (Linhas, Colunas ou Cruz)
+            # Checar Prêmio (Linha Central)
             res = st.session_state.grade
-            if len(set(res[3:6])) == 1: # Linha do meio
+            if len(set(res[3:6])) == 1: 
                 st.session_state.moedas += 500
                 st.balloons()
             st.rerun()
 
-st.write("<p style='text-align:center; color:white;'>Entenda os prêmios | Nenhuma tentativa restante</p>", unsafe_allow_html=True)
+st.write("<p style='text-align:center; color:white; font-size:14px;'>Entenda os prêmios | Nenhuma tentativa restante</p>", unsafe_allow_html=True)
 
 with st.sidebar:
-    if st.button("RESET"):
+    if st.button("🔄 RESET"):
         st.session_state.moedas = 1000
         st.rerun()
