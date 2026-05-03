@@ -4,49 +4,70 @@ import time
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO ---
-st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🎰")
+# --- 1. CONFIGURAÇÃO DE ENGINE ---
+st.set_page_config(page_title="KAMILLY ARCADE PRO", layout="centered", page_icon="🎰")
 
-# --- 2. BANCO DE DADOS COMPLETO ---
+# --- 2. BANCO DE DADOS (RNG & ASSETS) ---
 familia = {
-    "kamilly": ["kamilly.jpg", "👑"],
-    "kauan": ["kauan.jpg", "🤙"],
-    "mamae": ["mamae.jpg", "👩‍🦰"],
-    "papai": ["papai.jpg", "🧔"],
-    "tio_michel": ["tio_michel.jpg", "👨‍💻"],
-    "tio_mk": ["tio_mk.jpg", "🍻"],
-    "tio_padrinho": ["tio_padrinho.jpg", "🤟"],
-    "vovo_diva": ["vovo_diva.jpg", "💎"],
-    "vovo_geraldo": ["vovo_geraldo.jpg", "🤠"],
-    "vovo_mario": ["vovo_mario.jpg", "👨‍🦳"]
+    "kamilly": ["kamilly.jpg", "👑"], "kauan": ["kauan.jpg", "🤙"],
+    "mamae": ["mamae.jpg", "👩‍🦰"], "papai": ["papai.jpg", "🧔"],
+    "tio_michel": ["tio_michel.jpg", "👨‍💻"], "tio_mk": ["tio_mk.jpg", "🍻"],
+    "tio_padrinho": ["tio_padrinho.jpg", "🤟"], "vovo_diva": ["vovo_diva.jpg", "💎"],
+    "vovo_geraldo": ["vovo_geraldo.jpg", "🤠"], "vovo_mario": ["vovo_mario.jpg", "👨‍🦳"]
 }
 
-# --- 3. ESTADOS ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 4. CSS PARA EXCELÊNCIA VISUAL (TÍTULO E ANIMAÇÃO) ---
+# --- 3. SOUND ENGINE & ATTRACT MODE (JS) ---
+# Gerencia os áudios via Gatilhos (Triggers)
+def sound_engine():
+    st.components.v1.html("""
+        <script>
+        window.playSFX = function(type) {
+            const sounds = {
+                'spin': 'https://soundjay.com',
+                'win': 'https://soundjay.com',
+                'attract': 'https://soundjay.com'
+            };
+            var audio = new Audio(sounds[type]);
+            audio.volume = 0.5;
+            audio.play();
+        }
+        </script>
+    """, height=0)
+
+# --- 4. CSS: REELS, VIRTUAL MAPPING & FIX HEADER ---
 st.markdown("""
     <style>
-    .block-container { padding-top: 0rem !important; margin-top: -60px !important; }
+    /* FIX: Nome Kamilly no topo sem vãos */
+    .block-container { padding-top: 0rem !important; margin-top: -80px !important; }
     .main { background-color: #050a1a; }
     header {visibility: hidden;}
     
-    .titulo-kamilly { 
-        margin-top: 0px !important; 
-        padding-top: 0px !important;
+    .kamilly-header { 
         color: #FF69B4; 
         text-align: center; 
-        font-size: 50px; 
+        font-size: 60px; 
         font-family: 'Comic Sans MS', cursive;
-        text-shadow: 3px 3px #fff;
+        text-shadow: 0 0 20px #FF69B4, 2px 2px #fff;
+        margin-bottom: 0px;
+        animation: attractMode 2s infinite alternate;
     }
 
+    /* ATTRACT MODE: Brilho pulsante no título */
+    @keyframes attractMode {
+        from { filter: brightness(1); }
+        to { filter: brightness(1.5) drop-shadow(0 0 15px #FF69B4); }
+    }
+
+    /* REELS: Efeito de rolo de cassino */
     .arcade-frame {
-        border: 8px solid #FF69B4; border-radius: 20px;
-        background: #0a2a7a; padding: 0px; margin: auto;
-        overflow: hidden; line-height: 0; max-width: 320px;
-        box-shadow: 0 0 40px #FF69B4;
+        border: 10px solid #FF69B4; border-radius: 30px;
+        background: #000; padding: 0px; margin: auto;
+        overflow: hidden; max-width: 320px;
+        box-shadow: 0 0 50px #FF69B4;
+        position: relative;
     }
 
     .grid-container {
@@ -54,102 +75,108 @@ st.markdown("""
         grid-gap: 0px; width: 100%;
     }
 
-    /* EFEITO DE MOVIMENTO VERTICAL */
+    /* ANIMAÇÃO DE GIRO (SPIN) COM BLUR (DESFOQUE) */
+    .reel-spin {
+        animation: blurSpin 0.1s infinite linear;
+    }
+
+    @keyframes blurSpin {
+        0% { transform: translateY(-10px); filter: blur(2px); }
+        50% { transform: translateY(10px); filter: blur(5px); }
+        100% { transform: translateY(-10px); filter: blur(2px); }
+    }
+
     .grid-container img {
-        width: 100%; height: 150px; object-fit: cover; display: block;
-        animation: slideDown 0.1s linear;
-    }
-
-    @keyframes slideDown {
-        from { transform: translateY(-100%); }
-        to { transform: translateY(0); }
-    }
-
-    .slot-reserva {
-        height: 150px; background: #0a2a7a; display: flex;
-        align-items: center; justify-content: center; font-size: 40px;
+        width: 100%; height: 160px; object-fit: cover; display: block;
     }
 
     .moedas-banner {
         background: linear-gradient(90deg, #FFB6C1, #FF69B4);
         color: white; padding: 10px; border-radius: 50px;
         font-size: 28px; font-weight: bold; text-align: center;
-        max-width: 260px; margin: 0 auto 10px auto;
-        box-shadow: 0 0 15px #FF69B4;
+        max-width: 240px; margin: 10px auto;
+        box-shadow: 0 0 20px #FF69B4;
     }
 
     .stButton>button {
-        background: linear-gradient(145deg, #FFB6C1, #FFC0CB) !important;
-        color: #fff !important; font-size: 28px !important; font-weight: bold !important;
-        height: 70px !important; width: 100% !important; max-width: 280px !important;
-        border-radius: 40px !important; border: 3px solid #fff !important;
-        box-shadow: 0 8px 15px rgba(255, 182, 193, 0.4) !important;
+        background: linear-gradient(145deg, #FF69B4, #FF1493) !important;
+        color: white !important; font-size: 30px !important; font-weight: bold !important;
+        height: 80px !important; width: 100% !important; max-width: 280px !important;
+        border-radius: 50px !important; border: 4px solid #fff !important;
+        box-shadow: 0 10px 20px rgba(255, 20, 147, 0.4) !important;
         margin: 10px auto !important; display: block !important;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. FUNÇÕES AUXILIARES ---
-def tocar_audio(url):
-    html_audio = f"""
-        <iframe src="{url}" allow="autoplay" style="display:none"></iframe>
-        <audio autoplay style="display:none"><source src="{url}" type="audio/mp3"></audio>
-    """
-    st.components.v1.html(html_audio, height=0)
-
+# --- 5. FUNÇÕES DE SUPORTE ---
 def get_base64(file_path):
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
             return f"data:image/jpeg;base64,{base64.b64encode(f.read()).decode()}"
     return None
 
-# --- 6. INTERFACE ---
-st.markdown("<p class='titulo-kamilly'>Kamilly</p>", unsafe_allow_html=True)
+def trigger_audio(type):
+    st.components.v1.html(f"<script>window.playSFX('{type}')</script>", height=0)
+
+# --- 6. INTERFACE (O NOME KAMILLY AGORA É O TOPO) ---
+st.markdown("<p class='kamilly-header'>Kamilly</p>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
 caixa_roleta = st.empty()
 
-def mostrar_roleta(lista):
-    html = '<div class="arcade-frame"><div class="grid-container">'
+def mostrar_roleta(lista, girando=False):
+    # Virtual Reel Mapping: Se girando, aplica a classe reel-spin
+    classe_giro = "reel-spin" if girando else ""
+    html = f'<div class="arcade-frame"><div class="grid-container {classe_giro}">'
     for nome in lista:
         foto, emoji = familia.get(nome, ["", "💎"])
         b64 = get_base64(foto)
         if b64: html += f'<img src="{b64}">'
-        else: html += f'<div class="slot-reserva">{emoji}</div>'
+        else: html += f'<div style="height:160px; display:flex; align-items:center; justify-content:center; font-size:50px;">{emoji}</div>'
     html += '</div></div>'
     caixa_roleta.markdown(html, unsafe_allow_html=True)
 
+# Chamada inicial
+sound_engine()
 mostrar_roleta(st.session_state.grade)
 
-# --- 7. LÓGICA DE GIRO (ROLETA DE CASSINO) ---
+# --- 7. LÓGICA DE SPIN (GIRO) ---
 if st.button("VAMOS BRINCAR"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        tocar_audio("https://soundjay.com")
         
-        # Simulação de rolagem: aumenta o número de trocas (15 vezes) e reduz o tempo (0.03s)
-        for _ in range(15):
-            grade_temp = [random.choice(list(familia.keys())) for _ in range(6)]
-            mostrar_roleta(grade_temp)
-            time.sleep(0.03) 
+        # GATILHO (Trigger): Som de Spin
+        trigger_audio('spin')
         
-        # Resultado Final
-        if random.random() < 0.35:
+        # GIRO (Spin Animation): Mapeamento Virtual de 12 quadros
+        for _ in range(12):
+            grade_temp = random.choices(list(familia.keys()), k=6)
+            mostrar_roleta(grade_temp, girando=True)
+            time.sleep(0.04) # Velocidade extrema de slot machine
+        
+        # RNG (Gerador de Números Aleatórios): Define o prêmio
+        sorteio_rng = random.random()
+        if sorteio_rng < 0.35: # 35% de chance (Jackpot)
             venc = random.choice(list(familia.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2500
-            mostrar_roleta(st.session_state.grade)
+            mostrar_roleta(st.session_state.grade, girando=False)
+            
+            # GATILHO: Efeitos de Jackpot
             st.balloons()
-            tocar_audio("https://soundjay.com")
-            st.success("🏆 VOCÊ GANHOU!")
+            trigger_audio('win')
+            st.success("✨ JACKPOT! ✨")
         else:
-            st.session_state.grade = [random.choice(list(familia.keys())) for _ in range(6)]
-            mostrar_roleta(st.session_state.grade)
+            st.session_state.grade = random.choices(list(familia.keys()), k=6)
+            mostrar_roleta(st.session_state.grade, girando=False)
+        
         st.rerun()
     else:
-        st.error("Ops! Suas moedas acabaram.")
+        st.error("Moedas esgotadas!")
 
-if st.sidebar.button("🔄 RECARREGAR MOEDAS"):
+# Attract Mode manual
+if st.sidebar.button("🔄 RECARREGAR"):
     st.session_state.moedas = 1000
+    trigger_audio('attract')
     st.rerun()
