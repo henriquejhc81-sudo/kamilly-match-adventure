@@ -3,7 +3,7 @@ import random
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO (TOTALMENTE LIMPO) ---
+# --- 1. CONFIGURAÇÃO DE ALTA PERFORMANCE ---
 st.set_page_config(
     page_title="KAMILLY ARCADE", 
     layout="centered", 
@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. BANCO DE DADOS (11 PERSONAGENS) ---
+# --- 2. BANCO DE DADOS COMPLETO (11 PERSONAGENS) ---
 familia_config = {
     "kamilly": "kamilly.jpg", "kauan": "kauan.jpg", "mamae": "mamae.jpg", 
     "papai": "papai.jpg", "tio_michel": "tio_michel.jpg", "tio_mk": "tio_mk.jpg", 
@@ -41,36 +41,45 @@ def carregar_assets_b64():
 
 assets = carregar_assets_b64()
 
+# Inicialização de Estados
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
-if 'ganhou_rodada' not in st.session_state: st.session_state.ganhou_rodada = False
+if 'vitoria_pendente' not in st.session_state: st.session_state.vitoria_pendente = False
 
-# --- 4. CSS: DESIGN "APP" COM NOME GIGANTE E SEM CABEÇALHO ---
+# --- 4. CSS: DESIGN "NINJA" (BLOQUEIA TUDO E NOME GIGANTE) ---
 st.markdown("""
     <style>
-    /* REMOVE TUDO QUE PODE ABRIR TELAS DE INVITE/MENU */
-    header, footer, .stDeployButton, [data-testid="stToolbar"], [data-testid="stSidebar"] {
+    /* BLOQUEIO SUPREMO DE INTERFACE DO STREAMLIT */
+    header, footer, .stDeployButton, [data-testid="stToolbar"], [data-testid="stSidebar"], [data-testid="collapsedControl"] {
         display: none !important;
         visibility: hidden !important;
+        height: 0 !important;
     }
-    .block-container { padding-top: 1rem !important; }
+    .block-container { padding-top: 0rem !important; margin-top: -20px !important; }
     .main { background-color: #050a1a; overflow: hidden; }
 
-    /* NOME KAMILLY AUMENTADO */
-    .nome-kamilly { 
-        color: #FF69B4; text-align: center; 
-        font-size: 90px; /* Nome bem maior */
+    /* NOME KAMILLY MEGA NEON */
+    .mega-title { 
+        color: #FF69B4; 
+        text-align: center; 
+        font-size: 100px; /* Nome gigante */
         font-family: 'Comic Sans MS', cursive;
-        text-shadow: 0 0 25px #FF69B4, 5px 5px #fff;
-        margin-bottom: 0px; font-weight: bold;
-        line-height: 1;
+        text-shadow: 0 0 20px #FF69B4, 0 0 40px #FF69B4, 5px 5px #fff;
+        margin-top: 10px !important;
+        margin-bottom: 0px;
+        font-weight: bold;
+        animation: pulseNeon 1.5s infinite alternate;
+    }
+    @keyframes pulseNeon {
+        from { filter: brightness(1); transform: scale(1); }
+        to { filter: brightness(1.3); transform: scale(1.02); }
     }
 
     .arcade-frame {
-        border: 10px solid #0055ff; border-radius: 35px;
+        border: 12px solid #0055ff; border-radius: 40px;
         background: #000; padding: 0px; margin: auto;
-        overflow: hidden; max-width: 310px;
-        box-shadow: 0 0 40px #0055ff; cursor: pointer; line-height: 0;
+        overflow: hidden; max-width: 320px;
+        box-shadow: 0 0 50px #0055ff; cursor: pointer; line-height: 0;
     }
 
     .grid-container {
@@ -78,14 +87,14 @@ st.markdown("""
         grid-gap: 0px; width: 100%;
     }
 
-    .grid-container img { width: 100%; height: 160px; object-fit: cover; display: block; pointer-events: none; }
+    .grid-container img { width: 100%; height: 165px; object-fit: cover; display: block; pointer-events: none; }
 
     .moedas-banner {
         background: linear-gradient(90deg, #FFB6C1, #FF69B4);
-        color: white; padding: 10px; border-radius: 50px;
-        font-size: 26px; font-weight: bold; text-align: center;
-        max-width: 190px; margin: 10px auto 15px auto;
-        box-shadow: 0 0 15px #FF69B4; border: 2px solid white;
+        color: white; padding: 12px; border-radius: 50px;
+        font-size: 32px; font-weight: bold; text-align: center;
+        max-width: 220px; margin: 15px auto;
+        box-shadow: 0 0 20px #FF69B4; border: 3px solid white;
     }
     .stButton { display: none; }
     </style>
@@ -145,7 +154,7 @@ def injetar_motor_js(resultado_final, ganhou):
     """, height=0)
 
 # --- 6. INTERFACE ---
-st.markdown("<p class='nome-kamilly'>Kamilly</p>", unsafe_allow_html=True)
+st.markdown("<p class='mega-title'>Kamilly</p>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
 html_grade = '<div class="arcade-frame"><div class="grid-container">'
@@ -154,15 +163,15 @@ for nome in st.session_state.grade:
 html_grade += '</div></div>'
 st.markdown(html_grade, unsafe_allow_html=True)
 
-st.markdown("<p style='color:white; text-align:center; font-size:14px; margin-top:10px;'>👆 TOQUE PARA JOGAR!</p>", unsafe_allow_html=True)
+st.markdown("<p style='color:white; text-align:center; font-size:16px; margin-top:15px; font-weight:bold;'>👆 TOQUE NAS FOTOS PARA BRINCAR!</p>", unsafe_allow_html=True)
 
-# Sincronização e Moedas
+# BOTÃO SYNC (LÓGICA DE MOEDAS BLINDADA)
 if st.button("SYNC"):
     st.session_state.moedas -= 50
-    if st.session_state.ganhou_rodada:
+    if st.session_state.vitoria_pendente:
         st.balloons()
-        st.session_state.moedas += 3000
-        st.session_state.ganhou_rodada = False
+        st.session_state.moedas += 3050 # 3000 do prêmio + as 50 de volta
+        st.session_state.vitoria_pendente = False
     st.rerun()
 
 # --- 7. LÓGICA DE SORTEIO ---
@@ -171,15 +180,15 @@ if st.session_state.moedas >= 50:
     if sorteio_vitoria:
         venc = random.choice(list(familia_config.keys()))
         resultado = [venc] * 6
-        st.session_state.ganhou_rodada = True
+        st.session_state.vitoria_pendente = True
     else:
         resultado = random.choices(list(familia_config.keys()), k=6)
         if len(set(resultado)) == 1: resultado = random.sample(list(familia_config.keys()), 6)
-        st.session_state.ganhou_rodada = False
+        st.session_state.vitoria_pendente = False
 
     st.session_state.grade = resultado
     injetar_motor_js(resultado, sorteio_vitoria)
 else:
-    if st.button("🔄 Recarregar Moedas", key="reset"):
+    if st.button("🔄 RECARREGAR MOEDAS", key="recharge"):
         st.session_state.moedas = 1000
         st.rerun()
