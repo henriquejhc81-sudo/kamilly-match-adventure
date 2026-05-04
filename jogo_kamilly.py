@@ -4,10 +4,10 @@ import time
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO DE ALTA PERFORMANCE ---
+# --- 1. CONFIGURAÇÃO DE ENGINE TURBO ---
 st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🎰")
 
-# --- 2. BANCO DE DADOS COMPLETO (11 PERSONAGENS) ---
+# --- 2. BANCO DE DADOS (11 PERSONAGENS) ---
 familia_config = {
     "kamilly": ["kamilly.jpg", "👑"], "kauan": ["kauan.jpg", "🤙"],
     "mamae": ["mamae.jpg", "👩‍🦰"], "papai": ["papai.jpg", "🧔"],
@@ -17,7 +17,7 @@ familia_config = {
     "vovo_neusa": ["vovo_neusa.jpg", "🌸"]
 }
 
-# --- 3. CACHE ATÔMICO (FIM DA TELA PRETA) ---
+# --- 3. CACHE ATÔMICO (FIM DA DEMORA E TELA PRETA) ---
 @st.cache_data
 def carregar_fotos_b64():
     memo = {}
@@ -36,20 +36,19 @@ assets = carregar_fotos_b64()
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 4. CSS AJUSTADO (NOME KAMILLY VISÍVEL E SEM VÃOS) ---
+# --- 4. CSS AJUSTADO (NOME MAIOR E BANNER MENOR) ---
 st.markdown("""
     <style>
-    /* AJUSTE DO TOPO PARA O NOME APARECER */
-    .block-container { padding-top: 2rem !important; margin-top: 0px !important; }
+    .block-container { padding-top: 1rem !important; }
     .main { background-color: #050a1a; overflow: hidden; }
     header { visibility: hidden; }
     
+    /* NOME MAIOR E MAIS BONITO */
     .nome-kamilly { 
-        color: #FF69B4; text-align: center; font-size: 50px; 
+        color: #FF69B4; text-align: center; font-size: 65px; 
         font-family: 'Comic Sans MS', cursive;
-        text-shadow: 0 0 15px #FF69B4, 2px 2px #fff;
-        margin-top: 0px !important;
-        margin-bottom: 10px;
+        text-shadow: 0 0 20px #FF69B4, 2px 2px #fff;
+        margin-bottom: 5px;
     }
 
     .arcade-frame {
@@ -68,11 +67,12 @@ st.markdown("""
         width: 100%; height: 155px; object-fit: cover; display: block;
     }
 
+    /* BANNER DE MOEDAS DIMINUÍDO */
     .moedas-banner {
         background: linear-gradient(90deg, #FFB6C1, #FF69B4);
-        color: white; padding: 8px; border-radius: 50px;
-        font-size: 26px; font-weight: bold; text-align: center;
-        max-width: 220px; margin: 10px auto;
+        color: white; padding: 6px; border-radius: 50px;
+        font-size: 22px; font-weight: bold; text-align: center;
+        max-width: 180px; margin: 5px auto 15px auto;
         box-shadow: 0 0 15px #FF69B4;
     }
 
@@ -86,17 +86,17 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. MOTOR DE SOM (GATILHO INSTANTÂNEO) ---
+# --- 5. MOTOR DE SOM (GATILHO VIA JS) ---
 def play_sound(tipo):
     urls = {
         'giro': 'https://soundjay.com',
         'vitoria': 'https://soundjay.com'
     }
-    # Injeção de áudio via JS para ignorar lentidão do Python
+    # Injeção direta para ignorar o bloqueio do navegador
     st.components.v1.html(f"""
         <script>
         var audio = new Audio('{urls[tipo]}');
-        audio.play();
+        audio.play().catch(function(error) {{ console.log("Som bloqueado: interaja com a tela primeiro"); }});
         </script>
     """, height=0)
 
@@ -104,7 +104,6 @@ def play_sound(tipo):
 st.markdown("<p class='nome-kamilly'>Kamilly</p>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
-# Placeholder fixo para evitar "pulo" de tela
 placeholder = st.empty()
 
 def render_ui(lista):
@@ -121,21 +120,19 @@ def render_ui(lista):
 
 render_ui(st.session_state.grade)
 
-# --- 7. LÓGICA DE GIRO (3 SEGUNDOS COM DESACELERAÇÃO) ---
+# --- 7. LÓGICA DE GIRO (TURBO) ---
 if st.button("VAMOS BRINCAR"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
         play_sound('giro')
         
-        # MOTOR DE VELOCIDADE (Total 3 segundos)
-        # 20 trocas: começa em 0.02s e termina em 0.4s
-        passos = 22
+        # MOTOR DE VELOCIDADE (Aumentada)
+        passos = 18
         for i in range(passos):
             grade_temp = random.choices(list(familia_config.keys()), k=6)
             render_ui(grade_temp)
-            
-            # Curva de desaceleração suave
-            atraso = 0.02 + (i / passos) ** 2 * 0.35
+            # Desaceleração mais rápida para o jogo não parecer "pesado"
+            atraso = 0.01 + (i / passos) ** 3 * 0.25
             time.sleep(atraso)
         
         # RESULTADO FINAL
@@ -152,7 +149,7 @@ if st.button("VAMOS BRINCAR"):
         
         st.rerun()
     else:
-        st.error("Suas moedas acabaram!")
+        st.error("Ops! Acabaram as moedas.")
 
 if st.sidebar.button("🔄 RECARREGAR"):
     st.session_state.moedas = 1000
