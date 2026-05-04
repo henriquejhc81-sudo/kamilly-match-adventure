@@ -3,7 +3,7 @@ import random
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO DO APP ---
+# --- 1. CONFIGURAÇÃO DO APP (ESTABILIDADE MOBILE) ---
 st.set_page_config(
     page_title="KAMILLY ARCADE", 
     layout="centered", 
@@ -36,6 +36,7 @@ def carregar_assets_b64():
         arq = f"{s}.mp3"
         if os.path.exists(arq):
             with open(arq, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode()
                 memo["sons"][s] = f"data:audio/mp3;base64,{base64.b64encode(f.read()).decode()}"
         else:
             memo["sons"][s] = ""
@@ -43,10 +44,11 @@ def carregar_assets_b64():
 
 assets = carregar_assets_b64()
 
-# Estados de Sessão
+# Inicialização de Estados (Preserva os valores entre jogadas)
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 if 'vitoria_confirmada' not in st.session_state: st.session_state.vitoria_confirmada = False
+if 'custo_pendente' not in st.session_state: st.session_state.custo_pendente = False
 
 # --- 4. CSS: DESIGN PREMIUM E NOME GIGANTE ---
 st.markdown("""
@@ -111,7 +113,7 @@ def injetar_motor_js(resultado_final, ganhou):
             if (window.isSpinning) return;
             window.isSpinning = true;
             
-            // SEQUÊNCIA DE SOM: s1 toca e quando acaba começa s2
+            // Sequência de áudio
             if ('{s1}' !== '') {{
                 audio1.play();
                 audio1.onended = function() {{ if ('{s2}' !== '') audio2.play(); }};
@@ -137,6 +139,7 @@ def injetar_motor_js(resultado_final, ganhou):
                     
                     setTimeout(function() {{
                         window.isSpinning = false;
+                        // Aciona o SYNC no Python
                         window.parent.document.querySelectorAll('button')[0].click();
                     }}, 600);
                 }}
@@ -155,33 +158,37 @@ for nome in st.session_state.grade:
 html_roleta += '</div></div>'
 st.markdown(html_roleta, unsafe_allow_html=True)
 
-st.markdown("<p style='color:white; text-align:center; font-size:14px; margin-top:10px;'>👆 TOQUE PARA JOGAR!</p>", unsafe_allow_html=True)
+st.markdown("<p style='color:white; text-align:center; font-size:14px; margin-top:10px;'>👆 TOQUE PARA BRINCAR!</p>", unsafe_allow_html=True)
 
-# BOTÃO SYNC - LÓGICA DE PREMIAÇÃO REAL
+# BOTÃO SYNC - ATUALIZAÇÃO DO BÔNUS (VALOR REAL)
 if st.button("SYNC"):
-    st.session_state.moedas -= 50 # Custo da jogada
+    # Subtrai o valor da jogada apenas quando o giro termina
+    st.session_state.moedas -= 50
     if st.session_state.vitoria_confirmada:
         st.balloons()
-        st.session_state.moedas += 3000 # Prêmio aumentado para comemorar!
+        st.session_state.moedas += 3000
         st.session_state.vitoria_confirmada = False
     st.rerun()
 
 # --- 7. LÓGICA DE SORTEIO (RNG) ---
 if st.session_state.moedas >= 50:
-    sorteio_win = random.random() < 0.35 # 35% de chance de ganhar
+    sorteio_win = random.random() < 0.35
     if sorteio_win:
         venc = random.choice(list(familia_config.keys()))
         resultado = [venc] * 6
         st.session_state.vitoria_confirmada = True
     else:
         resultado = random.choices(list(familia_config.keys()), k=6)
-        if len(set(resultado)) == 1: resultado = random.sample(list(familia_config.keys()), 6)
+        if len(set(resultado)) == 1: 
+            resultado = random.sample(list(familia_config.keys()), 6)
         st.session_state.vitoria_confirmada = False
 
+    # Define a grade que será mostrada APÓS a animação do JavaScript
     st.session_state.grade = resultado
     injetar_motor_js(resultado, sorteio_win)
 else:
-    st.error("Acabaram as moedas! Recarregue.")
-    if st.sidebar.button("🔄 RECARREGAR"):
-        st.session_state.moedas = 1000
-        st.rerun()
+    st.error("Acabaram as moedas! Recarregue a página.")
+
+if st.sidebar.button("🔄 RECARREGAR"):
+    st.session_state.moedas = 1000
+    st.rerun()
