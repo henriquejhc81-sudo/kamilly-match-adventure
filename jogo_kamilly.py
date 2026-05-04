@@ -3,7 +3,7 @@ import random
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO (SIDEBAR TOTALMENTE BLOQUEADA) ---
+# --- 1. CONFIGURAÇÃO (TOTALMENTE LIMPO) ---
 st.set_page_config(
     page_title="KAMILLY ARCADE", 
     layout="centered", 
@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. BIBLIOTECA DE PERSONAGENS (11 IMAGENS) ---
+# --- 2. BANCO DE DADOS (11 PERSONAGENS) ---
 familia_config = {
     "kamilly": "kamilly.jpg", "kauan": "kauan.jpg", "mamae": "mamae.jpg", 
     "papai": "papai.jpg", "tio_michel": "tio_michel.jpg", "tio_mk": "tio_mk.jpg", 
@@ -41,31 +41,36 @@ def carregar_assets_b64():
 
 assets = carregar_assets_b64()
 
-# --- 4. ESTADOS DO JOGO ---
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 if 'ganhou_rodada' not in st.session_state: st.session_state.ganhou_rodada = False
 
-# --- 5. CSS: DESIGN "LIMPO" E SEM BARRA LATERAL ---
+# --- 4. CSS: DESIGN "APP" COM NOME GIGANTE E SEM CABEÇALHO ---
 st.markdown("""
     <style>
-    /* BLOQUEIO TOTAL DA BARRA LATERAL */
-    [data-testid="stSidebar"], [data-testid="collapsedControl"], header, footer { display: none !important; }
+    /* REMOVE TUDO QUE PODE ABRIR TELAS DE INVITE/MENU */
+    header, footer, .stDeployButton, [data-testid="stToolbar"], [data-testid="stSidebar"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
     .block-container { padding-top: 1rem !important; }
     .main { background-color: #050a1a; overflow: hidden; }
 
+    /* NOME KAMILLY AUMENTADO */
     .nome-kamilly { 
-        color: #FF69B4; text-align: center; font-size: 70px; 
+        color: #FF69B4; text-align: center; 
+        font-size: 90px; /* Nome bem maior */
         font-family: 'Comic Sans MS', cursive;
-        text-shadow: 0 0 20px #FF69B4, 4px 4px #fff;
-        margin-bottom: 5px; font-weight: bold;
+        text-shadow: 0 0 25px #FF69B4, 5px 5px #fff;
+        margin-bottom: 0px; font-weight: bold;
+        line-height: 1;
     }
 
     .arcade-frame {
         border: 10px solid #0055ff; border-radius: 35px;
         background: #000; padding: 0px; margin: auto;
         overflow: hidden; max-width: 310px;
-        box-shadow: 0 0 35px #0055ff; cursor: pointer; line-height: 0;
+        box-shadow: 0 0 40px #0055ff; cursor: pointer; line-height: 0;
     }
 
     .grid-container {
@@ -77,17 +82,16 @@ st.markdown("""
 
     .moedas-banner {
         background: linear-gradient(90deg, #FFB6C1, #FF69B4);
-        color: white; padding: 8px; border-radius: 50px;
+        color: white; padding: 10px; border-radius: 50px;
         font-size: 26px; font-weight: bold; text-align: center;
-        max-width: 190px; margin: 5px auto 15px auto;
+        max-width: 190px; margin: 10px auto 15px auto;
         box-shadow: 0 0 15px #FF69B4; border: 2px solid white;
     }
     .stButton { display: none; }
-    .recarregar-txt { color: #555; text-align: center; font-size: 10px; margin-top: 50px; cursor: pointer; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 6. MOTOR DE SOM E GIRO JAVASCRIPT ---
+# --- 5. MOTOR DE SOM E GIRO JAVASCRIPT ---
 def injetar_motor_js(resultado_final, ganhou):
     fotos_js = str(assets["fotos"]).replace("'", '"')
     s1, s2, win = assets["sons"]["spin"], assets["sons"]["spin2"], assets["sons"]["win"]
@@ -110,7 +114,6 @@ def injetar_motor_js(resultado_final, ganhou):
             if (window.isSpinning) return;
             window.isSpinning = true;
             
-            // Sons de giro
             if ('{s1}' !== '') {{
                 audio1.play();
                 audio1.onended = function() {{ if ('{s2}' !== '') audio2.play(); }};
@@ -128,7 +131,6 @@ def injetar_motor_js(resultado_final, ganhou):
                 }} else {{
                     clearInterval(timer);
                     imgs.forEach((img, i) => {{ img.src = fotos[final[i]]; }});
-                    
                     audio1.pause(); audio2.pause();
                     if ({str(ganhou).lower()} && '{win}' !== '') {{ audioWin.play(); }}
                     
@@ -142,7 +144,7 @@ def injetar_motor_js(resultado_final, ganhou):
         </script>
     """, height=0)
 
-# --- 7. INTERFACE ---
+# --- 6. INTERFACE ---
 st.markdown("<p class='nome-kamilly'>Kamilly</p>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
@@ -154,16 +156,16 @@ st.markdown(html_grade, unsafe_allow_html=True)
 
 st.markdown("<p style='color:white; text-align:center; font-size:14px; margin-top:10px;'>👆 TOQUE PARA JOGAR!</p>", unsafe_allow_html=True)
 
-# BOTÃO SYNC (LÓGICA DE MOEDAS CORRIGIDA)
+# Sincronização e Moedas
 if st.button("SYNC"):
-    st.session_state.moedas -= 50  # Subtrai o valor da jogada agora
+    st.session_state.moedas -= 50
     if st.session_state.ganhou_rodada:
         st.balloons()
-        st.session_state.moedas += 3000 # Soma o prêmio
+        st.session_state.moedas += 3000
         st.session_state.ganhou_rodada = False
     st.rerun()
 
-# --- 8. LÓGICA DE SORTEIO ---
+# --- 7. LÓGICA DE SORTEIO ---
 if st.session_state.moedas >= 50:
     sorteio_vitoria = random.random() < 0.35 
     if sorteio_vitoria:
@@ -178,9 +180,6 @@ if st.session_state.moedas >= 50:
     st.session_state.grade = resultado
     injetar_motor_js(resultado, sorteio_vitoria)
 else:
-    st.error("Acabaram as moedas!")
-
-# Botão escondido para recarregar se necessário
-if st.button("🔄 Recarregar", key="reset"):
-    st.session_state.moedas = 1000
-    st.rerun()
+    if st.button("🔄 Recarregar Moedas", key="reset"):
+        st.session_state.moedas = 1000
+        st.rerun()
