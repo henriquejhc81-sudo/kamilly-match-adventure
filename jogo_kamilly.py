@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. BANCO DE DADOS (11 PERSONAGENS) ---
+# --- 2. BANCO DE DADOS COMPLETO (11 PERSONAGENS) ---
 familia_config = {
     "kamilly": "kamilly.jpg", "kauan": "kauan.jpg",
     "mamae": "mamae.jpg", "papai": "papai.jpg",
@@ -21,7 +21,7 @@ familia_config = {
     "vovo_neusa": "vovo_neusa.jpg"
 }
 
-# --- 3. CACHE DE ASSETS (FOTOS E 3 SONS MP3) ---
+# --- 3. CACHE DE ASSETS (FOTOS E OS 3 SONS) ---
 @st.cache_data
 def carregar_assets_b64():
     memo = {"fotos": {}, "sons": {}}
@@ -32,7 +32,6 @@ def carregar_assets_b64():
         else:
             memo["fotos"][nome] = "https://placeholder.com?"
 
-    # Carrega spin, spin2 (novo) e win
     for s in ["spin", "spin2", "win"]:
         arq = f"{s}.mp3"
         if os.path.exists(arq):
@@ -49,7 +48,7 @@ if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 if 'vitoria_confirmada' not in st.session_state: st.session_state.vitoria_confirmada = False
 
-# --- 4. CSS: DESIGN PREMIUM ---
+# --- 4. CSS: DESIGN PREMIUM E NOME GIGANTE ---
 st.markdown("""
     <style>
     [data-testid="stSidebarNav"], [data-testid="collapsedControl"], header, footer { display: none !important; }
@@ -67,7 +66,7 @@ st.markdown("""
         border: 10px solid #0055ff; border-radius: 35px;
         background: #000; padding: 0px; margin: auto;
         overflow: hidden; max-width: 310px;
-        box-shadow: 0 0 40px #0055ff;
+        box-shadow: 0 0 45px #0055ff;
         cursor: pointer; line-height: 0;
     }
 
@@ -89,34 +88,36 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. MOTOR DE SOM E GIRO JAVASCRIPT (SUPORTE A 2 SONS DE GIRO) ---
+# --- 5. MOTOR DE SOM SEQUENCIAL E GIRO ---
 def injetar_motor_js(resultado_final, ganhou):
     fotos_js = str(assets["fotos"]).replace("'", '"')
-    spin1 = assets["sons"]["spin"]
-    spin2 = assets["sons"]["spin2"]
-    win_snd = assets["sons"]["win"]
-    final_js = str(resultado_final).replace("'", '"')
+    s1, s2, win = assets["sons"]["spin"], assets["sons"]["spin2"], assets["sons"]["win"]
+    res_js = str(resultado_final).replace("'", '"')
     nomes_js = str(list(familia_config.keys())).replace("'", '"')
     
     st.components.v1.html(f"""
         <script>
         var fotos = {fotos_js};
         var nomes = {nomes_js};
-        var final = {final_js};
+        var final = {res_js};
         var frame = window.parent.document.querySelector('.arcade-frame');
         var imgs = window.parent.document.querySelectorAll('.grid-container img');
         
-        var audioSpin1 = new Audio('{spin1}');
-        var audioSpin2 = new Audio('{spin2}');
-        var audioWin = new Audio('{win_snd}');
+        var audio1 = new Audio('{s1}');
+        var audio2 = new Audio('{s2}');
+        var audioWin = new Audio('{win}');
 
         frame.onclick = function() {{
             if (window.isSpinning) return;
             window.isSpinning = true;
             
-            // Toca os dois sons de giro ao mesmo tempo
-            if ('{spin1}' !== '') audioSpin1.play().catch(e => {{}});
-            if ('{spin2}' !== '') audioSpin2.play().catch(e => {{}});
+            // SEQUÊNCIA DE SOM: s1 toca e quando acaba começa s2
+            if ('{s1}' !== '') {{
+                audio1.play();
+                audio1.onended = function() {{ if ('{s2}' !== '') audio2.play(); }};
+            }} else if ('{s2}' !== '') {{
+                audio2.play();
+            }}
             
             var duration = 3000; 
             var start = Date.now();
@@ -129,12 +130,10 @@ def injetar_motor_js(resultado_final, ganhou):
                     }});
                 }} else {{
                     clearInterval(timer);
-                    imgs.forEach((img, i) => {{ img.src = final[i]; }});
+                    imgs.forEach((img, i) => {{ img.src = fotos[final[i]]; }});
                     
-                    audioSpin1.pause(); audioSpin2.pause();
-                    if ({str(ganhou).lower()} && '{win_snd}' !== '') {{ 
-                        audioWin.play().catch(e => {{}}); 
-                    }}
+                    audio1.pause(); audio2.pause();
+                    if ({str(ganhou).lower()} && '{win}' !== '') {{ audioWin.play(); }}
                     
                     setTimeout(function() {{
                         window.isSpinning = false;
@@ -156,20 +155,20 @@ for nome in st.session_state.grade:
 html_roleta += '</div></div>'
 st.markdown(html_roleta, unsafe_allow_html=True)
 
-st.markdown("<p style='color:white; text-align:center; font-size:14px; margin-top:10px;'>👆 TOQUE NAS FOTOS PARA JOGAR!</p>", unsafe_allow_html=True)
+st.markdown("<p style='color:white; text-align:center; font-size:14px; margin-top:10px;'>👆 TOQUE PARA JOGAR!</p>", unsafe_allow_html=True)
 
-# BOTÃO SYNC - Onde a premiação acontece de verdade
+# BOTÃO SYNC - LÓGICA DE PREMIAÇÃO REAL
 if st.button("SYNC"):
-    st.session_state.moedas -= 50
+    st.session_state.moedas -= 50 # Custo da jogada
     if st.session_state.vitoria_confirmada:
         st.balloons()
-        st.session_state.moedas += 2500
+        st.session_state.moedas += 3000 # Prêmio aumentado para comemorar!
         st.session_state.vitoria_confirmada = False
     st.rerun()
 
-# --- 7. LÓGICA DE SORTEIO ---
+# --- 7. LÓGICA DE SORTEIO (RNG) ---
 if st.session_state.moedas >= 50:
-    sorteio_win = random.random() < 0.35
+    sorteio_win = random.random() < 0.35 # 35% de chance de ganhar
     if sorteio_win:
         venc = random.choice(list(familia_config.keys()))
         resultado = [venc] * 6
@@ -182,4 +181,7 @@ if st.session_state.moedas >= 50:
     st.session_state.grade = resultado
     injetar_motor_js(resultado, sorteio_win)
 else:
-    st.error("Acabaram as moedas! Recarregue a página.")
+    st.error("Acabaram as moedas! Recarregue.")
+    if st.sidebar.button("🔄 RECARREGAR"):
+        st.session_state.moedas = 1000
+        st.rerun()
