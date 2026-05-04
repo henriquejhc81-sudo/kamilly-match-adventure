@@ -3,7 +3,7 @@ import random
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO DE SEGURANÇA TOTAL ---
+# --- 1. CONFIGURAÇÃO SUPREMA (BLOQUEIA TUDO) ---
 st.set_page_config(
     page_title="KAMILLY ARCADE", 
     layout="centered", 
@@ -19,7 +19,7 @@ familia_config = {
     "vovo_geraldo": "vovo_geraldo.jpg", "vovo_mario": "vovo_mario.jpg", "vovo_neusa": "vovo_neusa.jpg"
 }
 
-# --- 3. CACHE DE ASSETS (FOTOS E SONS) ---
+# --- 3. CACHE DE ASSETS ---
 @st.cache_data
 def carregar_assets_b64():
     memo = {"fotos": {}, "sons": {}}
@@ -46,60 +46,55 @@ if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 if 'vitoria_pendente' not in st.session_state: st.session_state.vitoria_pendente = False
 
-# --- 4. CSS NUCLEAR (BLOQUEIA TELAS EXTRAS E FIXA DESIGN) ---
+# --- 4. CSS "DESTRUTOR DE CAMADAS" ---
 st.markdown("""
     <style>
-    /* BLOQUEIO SUPREMO: Esconde barra de convite, menu, cabeçalho e Manage App */
+    /* MATA A INTERFACE DO STREAMLIT QUE GERA A 'SEGUNDA CAMADA' */
     header, footer, .stDeployButton, [data-testid="stToolbar"], 
     [data-testid="stSidebar"], [data-testid="collapsedControl"],
-    .stAppViewContainer > section:nth-child(2) {
+    .viewerBadge_container__17nPy, .stAppViewContainer > section:nth-child(2) {
         display: none !important;
         visibility: hidden !important;
     }
     
-    /* Limpa o topo e o fundo */
     .block-container { padding-top: 0rem !important; margin-top: -20px !important; }
     .main { background-color: #050a1a; overflow: hidden; }
 
-    /* NOME KAMILLY MEGA NEON */
+    /* NOME GIGANTE ÚNICO */
     .mega-title { 
-        color: #FF69B4; text-align: center; font-size: 80px; 
+        color: #FF69B4; text-align: center; font-size: 85px; 
         font-family: 'Comic Sans MS', cursive;
         text-shadow: 0 0 20px #FF69B4, 4px 4px #fff;
-        margin: 10px 0 0px 0 !important; font-weight: bold; line-height: 1;
+        margin: 10px 0 5px 0 !important; font-weight: bold; line-height: 1;
     }
 
-    /* QUADRO AZUL (BOTÃO TOUCH) */
+    /* QUADRO AZUL */
     .arcade-frame {
         border: 12px solid #0055ff; border-radius: 40px;
         background: #000; padding: 0px; margin: auto;
         overflow: hidden; max-width: 310px;
         box-shadow: 0 0 50px #0055ff; cursor: pointer; line-height: 0;
-        z-index: 99; position: relative;
+        position: relative; z-index: 1000;
     }
 
-    .grid-container {
-        display: grid; grid-template-columns: 1fr 1fr;
-        grid-gap: 0px; width: 100%;
-    }
+    .grid-container { display: grid; grid-template-columns: 1fr 1fr; grid-gap: 0px; width: 100%; }
+    .grid-container img { width: 100%; height: 160px; object-fit: cover; display: block; pointer-events: none; }
 
-    .grid-container img { width: 100%; height: 165px; object-fit: cover; display: block; pointer-events: none; }
-
-    /* MARCADOR DE BÔNUS (MOEDAS) */
+    /* MARCADOR DE BÔNUS */
     .moedas-banner {
         background: linear-gradient(180deg, #FFB6C1 0%, #FF69B4 100%);
         color: white; padding: 10px; border-radius: 50px;
-        font-size: 38px; font-weight: bold; text-align: center;
-        max-width: 220px; margin: 10px auto;
+        font-size: 45px; font-weight: bold; text-align: center;
+        max-width: 240px; margin: 10px auto;
         box-shadow: 0 0 30px #FF69B4; border: 3px solid white;
     }
     
-    /* Esconde botões do sistema */
-    .stButton button { position: fixed; top: -500px; opacity: 0; }
+    /* ESCONDE O BOTÃO DE ATUALIZAÇÃO */
+    .stButton button { position: fixed; top: -1000px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. MOTOR JAVASCRIPT (SOM E GIRO) ---
+# --- 5. MOTOR DE SOM E GIRO ---
 def injetar_motor_js(resultado_final, ganhou):
     fotos_js = str(assets["fotos"]).replace("'", '"')
     s1, s2, win = assets["sons"]["spin"], assets["sons"]["spin2"], assets["sons"]["win"]
@@ -122,7 +117,6 @@ def injetar_motor_js(resultado_final, ganhou):
             if (window.isSpinning) return;
             window.isSpinning = true;
             
-            // Sequência de áudio
             if ('{s1}' !== '') {{
                 audio1.play();
                 audio1.onended = function() {{ if ('{s2}' !== '') audio2.play(); }};
@@ -145,8 +139,9 @@ def injetar_motor_js(resultado_final, ganhou):
                     
                     setTimeout(function() {{
                         window.isSpinning = false;
-                        // Aciona a cobrança e prêmio no Python
-                        window.parent.document.querySelector('button').click();
+                        // CLICA NO BOTÃO PARA RODAR O PYTHON (SYNC)
+                        var btn = window.parent.document.querySelector('button');
+                        if(btn) btn.click();
                     }}, 600);
                 }}
             }}, 60);
@@ -154,29 +149,33 @@ def injetar_motor_js(resultado_final, ganhou):
         </script>
     """, height=0)
 
-# --- 6. INTERFACE ---
-st.markdown("<p class='mega-title'>Kamilly</p>", unsafe_allow_html=True)
-st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
+# --- 6. INTERFACE ÚNICA (DENTRO DE CONTAINER VAZIO) ---
+# Isso garante que apenas UMA camada seja desenhada
+jogo_limpo = st.empty()
 
-# Quadro da Roleta
-html_grade = '<div class="arcade-frame"><div class="grid-container">'
-for nome in st.session_state.grade:
-    html_grade += f'<img src="{assets["fotos"].get(nome)}">'
-html_grade += '</div></div>'
-st.markdown(html_grade, unsafe_allow_html=True)
+with jogo_limpo.container():
+    st.markdown("<p class='mega-title'>Kamilly</p>", unsafe_allow_html=True)
+    st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
-st.markdown("<p style='color:white; text-align:center; font-size:16px; margin-top:10px; font-weight:bold;'>👆 TOQUE PARA JOGAR!</p>", unsafe_allow_html=True)
+    # Quadro da Roleta
+    html_grade = '<div class="arcade-frame"><div class="grid-container">'
+    for nome in st.session_state.grade:
+        html_grade += f'<img src="{assets["fotos"].get(nome)}">'
+    html_grade += '</div></div>'
+    st.markdown(html_grade, unsafe_allow_html=True)
 
-# BOTÃO DE ATUALIZAÇÃO (MOEDAS)
+    st.markdown("<p style='color:white; text-align:center; font-size:16px; margin-top:10px; font-weight:bold;'>👆 TOQUE NAS FOTOS PARA JOGAR!</p>", unsafe_allow_html=True)
+
+# LÓGICA DE SINCRONIA (SÓ RODA QUANDO O GIRO PARA)
 if st.button("SYNC"):
-    st.session_state.moedas -= 50 # Tira 50 por rodada
+    st.session_state.moedas -= 50
     if st.session_state.vitoria_pendente:
         st.balloons()
-        st.session_state.moedas += 3000 # Ganha 3000
+        st.session_state.moedas += 3000
         st.session_state.vitoria_pendente = False
     st.rerun()
 
-# --- 7. LÓGICA DE SORTEIO (RNG) ---
+# --- 7. SORTEIO PRÉVIO ---
 if st.session_state.moedas >= 50:
     sorteio_vitoria = random.random() < 0.35 
     if sorteio_vitoria:
