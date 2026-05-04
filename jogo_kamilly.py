@@ -4,10 +4,10 @@ import time
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO ---
-st.set_page_config(page_title="KAMILLY ARCADE PRO", layout="centered", page_icon="🎰")
+# --- 1. CONFIGURAÇÃO DE ENGINE ---
+st.set_page_config(page_title="KAMILLY ARCADE", layout="centered", page_icon="🎰")
 
-# --- 2. BANCO DE DADOS (11 PERSONAGENS PRESERVADOS) ---
+# --- 2. BANCO DE DADOS (TODOS OS 11 PERSONAGENS) ---
 familia_config = {
     "kamilly": ["kamilly.jpg", "👑"], "kauan": ["kauan.jpg", "🤙"],
     "mamae": ["mamae.jpg", "👩‍🦰"], "papai": ["papai.jpg", "🧔"],
@@ -17,9 +17,9 @@ familia_config = {
     "vovo_neusa": ["vovo_neusa.jpg", "🌸"]
 }
 
-# --- 3. CACHE DE IMAGENS ---
+# --- 3. CACHE DE ALTA VELOCIDADE (INSTANTÂNEO) ---
 @st.cache_data
-def carregar_tudo_b64():
+def carregar_assets():
     memo = {}
     for nome, info in familia_config.items():
         caminho = info[0]
@@ -27,26 +27,26 @@ def carregar_tudo_b64():
             with open(caminho, "rb") as f:
                 b64 = base64.b64encode(f.read()).decode()
                 memo[nome] = f"data:image/jpeg;base64,{b64}"
-        else:
-            memo[nome] = None
     return memo
 
-assets = carregar_tudo_b64()
+assets = carregar_assets()
 
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 4. CSS: ANIMAÇÃO DE ROLETA "LISA" (SEM TRAVAR) ---
+# --- 4. CSS: DESIGN EXCLUSIVO KAMILLY & SEM FOSCO ---
 st.markdown("""
     <style>
     .block-container { padding-top: 0rem !important; margin-top: -60px !important; }
     .main { background-color: #050a1a; overflow: hidden; }
     header { visibility: hidden; }
     
-    .kamilly-header { 
-        color: #FF69B4; text-align: center; font-size: 60px; 
+    /* NOME EXCLUSIVO ACIMA DO BÔNUS */
+    .nome-kamilly { 
+        color: #FF69B4; text-align: center; font-size: 55px; 
         font-family: 'Comic Sans MS', cursive;
         text-shadow: 0 0 15px #FF69B4, 2px 2px #fff;
+        margin-bottom: -10px;
     }
 
     .arcade-frame {
@@ -61,18 +61,10 @@ st.markdown("""
         grid-gap: 0px; width: 100%;
     }
 
-    /* O SEGREDO: Animação de descida contínua sem pular */
-    .slot-rolling img {
-        animation: rollLinear 0.1s infinite linear;
-    }
-
-    @keyframes rollLinear {
-        0% { transform: translateY(-20px); filter: blur(2px); }
-        100% { transform: translateY(20px); filter: blur(2px); }
-    }
-
+    /* IMAGENS NÍTIDAS (SEM FOSCO/BLUR) */
     .grid-container img {
         width: 100%; height: 155px; object-fit: cover; display: block;
+        filter: none !important; 
     }
 
     .moedas-banner {
@@ -83,80 +75,83 @@ st.markdown("""
         box-shadow: 0 0 20px #FF69B4;
     }
 
+    /* BOTÃO VAMOS BRINCAR INSTANTÂNEO */
     .stButton>button {
         background: linear-gradient(145deg, #FF69B4, #FF1493) !important;
-        color: white !important; font-size: 26px !important; font-weight: bold !important;
-        height: 70px !important; width: 100% !important; max-width: 280px !important;
+        color: white !important; font-size: 28px !important; font-weight: bold !important;
+        height: 75px !important; width: 100% !important; max-width: 280px !important;
         border-radius: 50px !important; border: 4px solid #fff !important;
         margin: 15px auto !important; display: block !important;
+        transition: 0.1s;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. MOTOR DE SOM (SOM DE GIRO E PRÊMIO) ---
+# --- 5. SOUND ENGINE (SOM QUE DESACELERA) ---
 def play_sound(tipo):
     urls = {
-        'spin': 'https://soundjay.com',
-        'win': 'https://soundjay.com'
+        'giro': 'https://soundjay.com',
+        'vitoria': 'https://soundjay.com'
     }
     st.components.v1.html(f"""
         <script>
         var audio = new Audio('{urls[tipo]}');
-        audio.play().catch(e => console.log('Som bloqueado pelo navegador'));
+        audio.play();
         </script>
     """, height=0)
 
 # --- 6. INTERFACE ---
-st.markdown("<p class='kamilly-header'>Kamilly</p>", unsafe_allow_html=True)
+st.markdown("<p class='nome-kamilly'>Kamilly</p>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
 placeholder = st.empty()
 
-def render_ui(lista, rolando=False):
-    # Quando rolando=True, o CSS ativa o filtro de blur e movimento vertical
-    classe_rolar = "slot-rolling" if rolando else ""
-    html = f'<div class="arcade-frame"><div class="grid-container {classe_rolar}">'
+def render_ui(lista):
+    html = f'<div class="arcade-frame"><div class="grid-container">'
     for nome in lista:
         url_b64 = assets.get(nome)
         if url_b64:
             html += f'<img src="{url_b64}">'
         else:
-            emoji = familia_config.get(nome, ["", "💎"])[1]
+            emoji = familia_config[nome][1]
             html += f'<div style="height:155px; background:#111; display:flex; align-items:center; justify-content:center; font-size:50px;">{emoji}</div>'
     html += '</div></div>'
     placeholder.markdown(html, unsafe_allow_html=True)
 
 render_ui(st.session_state.grade)
 
-# --- 7. LÓGICA DE GIRO (ROLETA FLUIDA) ---
+# --- 7. LÓGICA DE GIRO (4 SEGUNDOS COM DESACELERAÇÃO) ---
 if st.button("VAMOS BRINCAR"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
-        play_sound('spin')
+        play_sound('giro')
         
-        # Início do Giro: Mostra a animação rolando
-        # Reduzi o número de ciclos para o Python não "brigar" com o CSS
-        for i in range(5):
+        # MOTOR DE DESACELERAÇÃO (Giro por ~4 segundos)
+        # Começa com delay de 0.01s e termina em 0.4s
+        passos = 25
+        for i in range(passos):
             grade_temp = random.choices(list(familia_config.keys()), k=6)
-            render_ui(grade_temp, rolando=True)
-            time.sleep(0.12) # Tempo para o CSS brilhar
+            render_ui(grade_temp)
+            
+            # Curva de desaceleração (aumenta o tempo exponencialmente)
+            atraso = 0.01 + (i / passos) ** 3 * 0.4
+            time.sleep(atraso)
         
-        # RESULTADO FINAL (RNG)
-        if random.random() < 0.35: # 35% de chance de jackpot
+        # RESULTADO FINAL
+        if random.random() < 0.35:
             venc = random.choice(list(familia_config.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2500
-            render_ui(st.session_state.grade, rolando=False)
+            render_ui(st.session_state.grade)
             st.balloons()
-            play_sound('win')
-            st.toast(f"PARABÉNS! JACKPOT DE {venc.upper()}!")
+            play_sound('vitoria')
         else:
             st.session_state.grade = random.choices(list(familia_config.keys()), k=6)
-            render_ui(st.session_state.grade, rolando=False)
+            render_ui(st.session_state.grade)
         
         st.rerun()
     else:
-        st.error("Ops! Suas moedas acabaram.")
+        st.error("Suas moedas acabaram!")
 
 if st.sidebar.button("🔄 RECARREGAR"):
     st.session_state.moedas = 1000
