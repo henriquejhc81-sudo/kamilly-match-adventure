@@ -36,7 +36,7 @@ assets = carregar_tudo_b64()
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 
-# --- 4. CSS: ANIMAÇÃO DE ROLETA REAL E DESIGN ---
+# --- 4. CSS: ANIMAÇÃO DE ROLETA "LISA" (SEM TRAVAR) ---
 st.markdown("""
     <style>
     .block-container { padding-top: 0rem !important; margin-top: -60px !important; }
@@ -61,19 +61,18 @@ st.markdown("""
         grid-gap: 0px; width: 100%;
     }
 
-    /* ESTILO ROLETA: MOVIMENTO VERTICAL INFINITO DURANTE O GIRO */
-    .slot-rolling {
-        animation: rollEffect 0.15s infinite linear;
+    /* O SEGREDO: Animação de descida contínua sem pular */
+    .slot-rolling img {
+        animation: rollLinear 0.1s infinite linear;
     }
 
-    @keyframes rollEffect {
-        0% { transform: translateY(0px); }
-        100% { transform: translateY(-50px); }
+    @keyframes rollLinear {
+        0% { transform: translateY(-20px); filter: blur(2px); }
+        100% { transform: translateY(20px); filter: blur(2px); }
     }
 
     .grid-container img {
         width: 100%; height: 155px; object-fit: cover; display: block;
-        border-bottom: 1px solid #111;
     }
 
     .moedas-banner {
@@ -94,17 +93,16 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. MOTOR DE SOM (JS BLINDADO) ---
+# --- 5. MOTOR DE SOM (SOM DE GIRO E PRÊMIO) ---
 def play_sound(tipo):
     urls = {
         'spin': 'https://soundjay.com',
         'win': 'https://soundjay.com'
     }
-    # Injeta som via JS para garantir execução imediata
     st.components.v1.html(f"""
         <script>
         var audio = new Audio('{urls[tipo]}');
-        audio.play();
+        audio.play().catch(e => console.log('Som bloqueado pelo navegador'));
         </script>
     """, height=0)
 
@@ -115,6 +113,7 @@ st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>",
 placeholder = st.empty()
 
 def render_ui(lista, rolando=False):
+    # Quando rolando=True, o CSS ativa o filtro de blur e movimento vertical
     classe_rolar = "slot-rolling" if rolando else ""
     html = f'<div class="arcade-frame"><div class="grid-container {classe_rolar}">'
     for nome in lista:
@@ -122,33 +121,35 @@ def render_ui(lista, rolando=False):
         if url_b64:
             html += f'<img src="{url_b64}">'
         else:
-            emoji = familia_config[nome][1]
-            html += f'<div style="height:155px; display:flex; align-items:center; justify-content:center; font-size:50px;">{emoji}</div>'
+            emoji = familia_config.get(nome, ["", "💎"])[1]
+            html += f'<div style="height:155px; background:#111; display:flex; align-items:center; justify-content:center; font-size:50px;">{emoji}</div>'
     html += '</div></div>'
     placeholder.markdown(html, unsafe_allow_html=True)
 
 render_ui(st.session_state.grade)
 
-# --- 7. LÓGICA DE GIRO TURBO ---
+# --- 7. LÓGICA DE GIRO (ROLETA FLUIDA) ---
 if st.button("VAMOS BRINCAR"):
     if st.session_state.moedas >= 50:
         st.session_state.moedas -= 50
         play_sound('spin')
         
-        # ANIMAÇÃO ESTILO ROLETA (Gira rápido e para)
-        for i in range(10):
+        # Início do Giro: Mostra a animação rolando
+        # Reduzi o número de ciclos para o Python não "brigar" com o CSS
+        for i in range(5):
             grade_temp = random.choices(list(familia_config.keys()), k=6)
             render_ui(grade_temp, rolando=True)
-            time.sleep(0.04) # Alta velocidade
+            time.sleep(0.12) # Tempo para o CSS brilhar
         
-        # RESULTADO (RNG)
-        if random.random() < 0.35:
+        # RESULTADO FINAL (RNG)
+        if random.random() < 0.35: # 35% de chance de jackpot
             venc = random.choice(list(familia_config.keys()))
             st.session_state.grade = [venc] * 6
             st.session_state.moedas += 2500
             render_ui(st.session_state.grade, rolando=False)
             st.balloons()
             play_sound('win')
+            st.toast(f"PARABÉNS! JACKPOT DE {venc.upper()}!")
         else:
             st.session_state.grade = random.choices(list(familia_config.keys()), k=6)
             render_ui(st.session_state.grade, rolando=False)
