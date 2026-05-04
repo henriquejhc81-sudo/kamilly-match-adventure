@@ -1,179 +1,98 @@
-import streamlit as st
-import random
-import time
-import os
-import base64
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
-# --- 1. CONFIGURAÇÃO DO APP ---
-st.set_page_config(
-    page_title="KAMILLY ARCADE", 
-    layout="centered", 
-    page_icon="🎰", 
-    initial_sidebar_state="collapsed"
-)
+void main() => runApp(MaterialApp(home: RoletaVivaSorte()));
 
-# --- 2. BIBLIOTECA DE PERSONAGENS ---
-familia_config = [
-    "kamilly.jpg", "kauan.jpg", "mamae.jpg", "papai.jpg",
-    "tio_michel.jpg", "tio_mk.jpg", "tio_padrinho.jpg",
-    "vovo_diva.jpg", "vovo_geraldo.jpg", "vovo_mario.jpg", "vovo_neusa.jpg"
-]
+class RoletaVivaSorte extends StatefulWidget {
+  @override
+  _RoletaVivaSorteState createState() => _RoletaVivaSorteState();
+}
 
-# --- 3. CACHE DE IMAGENS (MEMÓRIA RÁPIDA) ---
-@st.cache_data
-def carregar_fotos_b64():
-    fotos = []
-    for img in familia_config:
-        if os.path.exists(img):
-            with open(img, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode()
-                fotos.append(f"data:image/jpeg;base64,{b64}")
-    if not fotos:
-        fotos = ["https://placeholder.com"]
-    return fotos
+class _RoletaVivaSorteState extends State<RoletaVivaSorte> with SingleTickerProviderStateMixin {
+  // Controle de Saldo e Som
+  double saldo = 100.0;
+  double custoJogada = 5.0;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  
+  // Controle da Animação
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  double _anguloFinal = 0.0;
 
-assets_fotos = carregar_fotos_b64()
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: Duration(seconds: 4));
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.decelerate);
+  }
 
-if 'moedas' not in st.session_state: st.session_state.moedas = 1000
-if 'grade' not in st.session_state: st.session_state.grade = assets_fotos[:6] if len(assets_fotos) >= 6 else [assets_fotos[0]]*6
-if 'vitoria_disparada' not in st.session_state: st.session_state.vitoria_disparada = False
-
-# --- 4. DESIGN NEON PARA ANDROID ---
-st.markdown("""
-    <style>
-    [data-testid="stSidebarNav"], [data-testid="collapsedControl"], header, footer { display: none !important; }
-    .block-container { padding-top: 1rem !important; }
-    .main { background-color: #050a1a; overflow: hidden; }
-
-    .nome-kamilly { 
-        color: #FF69B4; text-align: center; font-size: 55px; 
-        font-family: 'Comic Sans MS', cursive;
-        text-shadow: 0 0 15px #FF69B4, 2px 2px #fff;
-        margin-bottom: 5px;
+  void _girarRoleta() async {
+    // 1. VERIFICAÇÃO E SUBTRAÇÃO DE SALDO
+    if (saldo < custoJogada) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Saldo Insuficiente!")));
+      return;
     }
 
-    .arcade-frame {
-        border: 8px solid #0055ff; border-radius: 30px;
-        background: #000; padding: 0px; margin: auto;
-        overflow: hidden; max-width: 300px;
-        box-shadow: 0 0 30px #0055ff;
-        cursor: pointer; line-height: 0;
-    }
+    setState(() {
+      saldo -= custoJogada; // Subtrai o valor antes de girar
+    });
 
-    .grid-container {
-        display: grid; grid-template-columns: 1fr 1fr;
-        grid-gap: 0px; width: 100%;
-    }
+    // 2. TOCA O SOM (CORREÇÃO DO SOM)
+    await _audioPlayer.play(AssetSource('audios/spin_sound.mp3'));
 
-    .grid-container img {
-        width: 100%; height: 150px; object-fit: cover; display: block;
-    }
+    // 3. LÓGICA DE SORTEIO
+    Random random = Random();
+    double giroAdicional = random.nextDouble() * 2 * pi; // Define onde vai parar
+    _anguloFinal += (2 * pi * 5) + giroAdicional; // 5 voltas completas + sorteio
 
-    .moedas-banner {
-        background: linear-gradient(90deg, #FFB6C1, #FF69B4);
-        color: white; padding: 8px; border-radius: 50px;
-        font-size: 22px; font-weight: bold; text-align: center;
-        max-width: 180px; margin: 5px auto 15px auto;
-        box-shadow: 0 0 10px #FF69B4;
-    }
-    
-    .stButton { display: none; }
-    </style>
-    """, unsafe_allow_html=True)
+    _controller.forward(from: 0.0).then((_) {
+      _processarPremio(giroAdicional); // RECONHECE A PREMIAÇÃO
+    });
+  }
 
-# --- 5. MOTOR DE SOM E GIRO (JAVASCRIPT) ---
-def injetar_motor_js(final_imgs, ganhou):
-    fotos_js = str(assets_fotos).replace("'", '"')
-    final_js = str(final_imgs).replace("'", '"')
-    
-    # LINKS DOS SONS QUE VOCÊ ESCOLHEU
-    som_minion_giro = "https://myinstants.com"
-    som_stitch_premio = "https://myinstants.com"
-    
-    st.components.v1.html(f"""
-        <script>
-        var fotos = {fotos_js};
-        var final = {final_js};
-        var frame = window.parent.document.querySelector('.arcade-frame');
-        var imgs = window.parent.document.querySelectorAll('.grid-container img');
-        
-        var audioSpin = new Audio('{som_minion_giro}');
-        var audioWin = new Audio('{som_stitch_premio}');
+  void _processarPremio(double angulo) {
+    // Exemplo simples: divide a roleta em 4 partes
+    setState(() {
+      if (angulo < pi / 2) {
+        saldo += 10.0; // Ganhou 10
+        print("Ganhou R\$ 10!");
+      } else if (angulo < pi) {
+        print("Tente novamente!");
+      } else {
+        saldo += 2.0; // Ganhou 2
+      }
+    });
+  }
 
-        frame.onclick = function() {{
-            if (window.isSpinning) return;
-            window.isSpinning = true;
-            
-            // Toca a risada do Minion no giro
-            audioSpin.currentTime = 0;
-            audioSpin.play().catch(e => {{}});
-            
-            var duration = 3000; // 3 segundos de alegria
-            var start = Date.now();
-
-            var timer = setInterval(function() {{
-                var now = Date.now() - start;
-                if (now < duration) {{
-                    imgs.forEach(img => {{
-                        img.src = fotos[Math.floor(Math.random() * fotos.length)];
-                    }});
-                }} else {{
-                    clearInterval(timer);
-                    imgs.forEach((img, i) => {{ img.src = final[i]; }});
-                    
-                    audioSpin.pause(); // Para a risada do Minion
-
-                    if ({str(ganhou).lower()}) {{ 
-                        audioWin.play().catch(e => {{}}); // Toca o Stitch
-                    }}
-                    
-                    setTimeout(function() {{
-                        window.isSpinning = false;
-                        window.parent.document.querySelectorAll('button').click();
-                    }}, 800);
-                }}
-            }}, 60);
-        }};
-        </script>
-    """, height=0)
-
-# --- 6. INTERFACE VISUAL ---
-st.markdown("<p class='nome-kamilly'>Kamilly</p>", unsafe_allow_html=True)
-st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
-
-# Container da Roleta 2x3
-html_roleta = '<div class="arcade-frame"><div class="grid-container">'
-for img_url in st.session_state.grade:
-    html_roleta += f'<img src="{img_url}">'
-html_roleta += '</div></div>'
-st.markdown(html_roleta, unsafe_allow_html=True)
-
-st.markdown("<p style='color:white; text-align:center; font-size:12px; margin-top:10px;'>👆 TOQUE NAS FOTOS PARA BRINCAR!</p>", unsafe_allow_html=True)
-
-# Botão invisível para salvar dados
-if st.button("SYNC"):
-    if st.session_state.vitoria_disparada:
-        st.balloons()
-        st.session_state.vitoria_disparada = False
-    st.rerun()
-
-# --- 7. LÓGICA DO SORTEIO ---
-if st.session_state.moedas >= 50:
-    sorteio_vitoria = random.random() < 0.35 # 35% de chance
-    if sorteio_vitoria:
-        venc_img = random.choice(assets_fotos)
-        resultado = [venc_img] * 6
-    else:
-        resultado = random.choices(assets_fotos, k=6)
-        if len(set(resultado)) == 1: resultado = random.sample(assets_fotos, 6)
-
-    if not st.session_state.vitoria_disparada and st.session_state.grade != resultado:
-        st.session_state.grade = resultado
-        st.session_state.moedas -= 50
-        if sorteio_vitoria:
-            st.session_state.moedas += 2500
-            st.session_state.vitoria_disparada = True
-
-    injetar_motor_js(resultado, sorteio_vitoria)
-else:
-    st.warning("As moedas acabaram! Recarregue a página.")
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.green,
+      appBar: AppBar(title: Text("Viva a Sorte - Roleta")),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("SALDO: R\$ ${saldo.toStringAsFixed(2)}", 
+               style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+          SizedBox(height: 50),
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) {
+              return Transform.rotate(
+                angle: _animation.value * _anguloFinal,
+                child: Image.asset('assets/images/roleta.png', width: 300),
+              );
+            },
+          ),
+          SizedBox(height: 50),
+          ElevatedButton(
+            onPressed: _controller.isAnimating ? null : _girarRoleta,
+            child: Text("GIRAR (R\$ 5.00)", style: TextStyle(fontSize: 20)),
+            style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(horizontal: 50, vertical: 20)),
+          )
+        ],
+      ),
+    );
+  }
+}
