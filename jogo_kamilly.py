@@ -3,7 +3,7 @@ import random
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO DO APP (LIMPO E SEM BARRA LATERAL) ---
+# --- 1. CONFIGURAÇÃO DO APP ---
 st.set_page_config(
     page_title="KAMILLY ARCADE", 
     layout="centered", 
@@ -21,11 +21,10 @@ familia_config = {
     "vovo_neusa": "vovo_neusa.jpg"
 }
 
-# --- 3. CACHE DE ASSETS (CONVERTE FOTOS E SONS PARA MEMÓRIA RAM) ---
+# --- 3. CACHE DE ASSETS (FOTOS E 3 SONS MP3) ---
 @st.cache_data
 def carregar_assets_b64():
     memo = {"fotos": {}, "sons": {}}
-    # Carrega as 11 Fotos
     for nome, arquivo in familia_config.items():
         if os.path.exists(arquivo):
             with open(arquivo, "rb") as f:
@@ -33,41 +32,37 @@ def carregar_assets_b64():
         else:
             memo["fotos"][nome] = "https://placeholder.com?"
 
-    # Carrega os seus 2 sons (spin.mp3 e win.mp3)
-    for s in ["spin", "win"]:
+    # Carrega spin, spin2 (novo) e win
+    for s in ["spin", "spin2", "win"]:
         arq = f"{s}.mp3"
         if os.path.exists(arq):
             with open(arq, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode()
-                memo["sons"][s] = f"data:audio/mp3;base64,{b64}"
+                memo["sons"][s] = f"data:audio/mp3;base64,{base64.b64encode(f.read()).decode()}"
         else:
             memo["sons"][s] = ""
     return memo
 
 assets = carregar_assets_b64()
 
-# Inicialização de Estados
+# Estados de Sessão
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
-if 'vitoria_pendente' not in st.session_state: st.session_state.vitoria_pendente = False
+if 'vitoria_confirmada' not in st.session_state: st.session_state.vitoria_confirmada = False
 
-# --- 4. CSS: DESIGN MOBILE "APP" (SEM VÃOS E NOME GIGANTE) ---
+# --- 4. CSS: DESIGN PREMIUM ---
 st.markdown("""
     <style>
-    /* ESCONDE MENUS E BARRA LATERAL */
     [data-testid="stSidebarNav"], [data-testid="collapsedControl"], header, footer { display: none !important; }
     .block-container { padding-top: 1rem !important; }
     .main { background-color: #050a1a; overflow: hidden; }
 
-    /* NOME KAMILLY GIGANTE */
     .nome-kamilly { 
         color: #FF69B4; text-align: center; font-size: 75px; 
         font-family: 'Comic Sans MS', cursive;
         text-shadow: 0 0 20px #FF69B4, 4px 4px #fff;
-        margin-bottom: 0px; font-weight: bold;
+        margin-bottom: 5px; font-weight: bold;
     }
 
-    /* QUADRO AZUL (BOTÃO TOUCH) */
     .arcade-frame {
         border: 10px solid #0055ff; border-radius: 35px;
         background: #000; padding: 0px; margin: auto;
@@ -81,30 +76,26 @@ st.markdown("""
         grid-gap: 0px; width: 100%;
     }
 
-    .grid-container img {
-        width: 100%; height: 160px; object-fit: cover; display: block;
-        pointer-events: none;
-    }
+    .grid-container img { width: 100%; height: 160px; object-fit: cover; display: block; pointer-events: none; }
 
-    /* BANNER DE MOEDAS */
     .moedas-banner {
         background: linear-gradient(90deg, #FFB6C1, #FF69B4);
         color: white; padding: 8px; border-radius: 50px;
         font-size: 26px; font-weight: bold; text-align: center;
-        max-width: 190px; margin: 5px auto 15px auto;
+        max-width: 200px; margin: 5px auto 15px auto;
         box-shadow: 0 0 15px #FF69B4; border: 2px solid white;
     }
-    
     .stButton { display: none; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. MOTOR DE GIRO E SOM JAVASCRIPT (SINCRO COM GITHUB) ---
-def injetar_motor_js(final_imgs, ganhou):
+# --- 5. MOTOR DE SOM E GIRO JAVASCRIPT (SUPORTE A 2 SONS DE GIRO) ---
+def injetar_motor_js(resultado_final, ganhou):
     fotos_js = str(assets["fotos"]).replace("'", '"')
-    spin_snd = assets["sons"]["spin"]
+    spin1 = assets["sons"]["spin"]
+    spin2 = assets["sons"]["spin2"]
     win_snd = assets["sons"]["win"]
-    final_js = str(final_imgs).replace("'", '"')
+    final_js = str(resultado_final).replace("'", '"')
     nomes_js = str(list(familia_config.keys())).replace("'", '"')
     
     st.components.v1.html(f"""
@@ -115,16 +106,19 @@ def injetar_motor_js(final_imgs, ganhou):
         var frame = window.parent.document.querySelector('.arcade-frame');
         var imgs = window.parent.document.querySelectorAll('.grid-container img');
         
-        var audioSpin = new Audio('{spin_snd}');
+        var audioSpin1 = new Audio('{spin1}');
+        var audioSpin2 = new Audio('{spin2}');
         var audioWin = new Audio('{win_snd}');
 
         frame.onclick = function() {{
             if (window.isSpinning) return;
             window.isSpinning = true;
             
-            if ('{spin_snd}' !== '') audioSpin.play().catch(e => {{}});
+            // Toca os dois sons de giro ao mesmo tempo
+            if ('{spin1}' !== '') audioSpin1.play().catch(e => {{}});
+            if ('{spin2}' !== '') audioSpin2.play().catch(e => {{}});
             
-            var duration = 3000; // 3 segundos de animação
+            var duration = 3000; 
             var start = Date.now();
 
             var timer = setInterval(function() {{
@@ -135,15 +129,16 @@ def injetar_motor_js(final_imgs, ganhou):
                     }});
                 }} else {{
                     clearInterval(timer);
-                    imgs.forEach((img, i) => {{ img.src = fotos[final[i]]; }});
+                    imgs.forEach((img, i) => {{ img.src = final[i]; }});
                     
+                    audioSpin1.pause(); audioSpin2.pause();
                     if ({str(ganhou).lower()} && '{win_snd}' !== '') {{ 
                         audioWin.play().catch(e => {{}}); 
                     }}
                     
                     setTimeout(function() {{
                         window.isSpinning = false;
-                        window.parent.document.querySelectorAll('button').click();
+                        window.parent.document.querySelectorAll('button')[0].click();
                     }}, 600);
                 }}
             }}, 60);
@@ -151,7 +146,7 @@ def injetar_motor_js(final_imgs, ganhou):
         </script>
     """, height=0)
 
-# --- 6. INTERFACE VISUAL ---
+# --- 6. INTERFACE ---
 st.markdown("<p class='nome-kamilly'>Kamilly</p>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
@@ -163,28 +158,28 @@ st.markdown(html_roleta, unsafe_allow_html=True)
 
 st.markdown("<p style='color:white; text-align:center; font-size:14px; margin-top:10px;'>👆 TOQUE NAS FOTOS PARA JOGAR!</p>", unsafe_allow_html=True)
 
-# Sincronização e Balões
+# BOTÃO SYNC - Onde a premiação acontece de verdade
 if st.button("SYNC"):
     st.session_state.moedas -= 50
-    if st.session_state.vitoria_pendente:
+    if st.session_state.vitoria_confirmada:
         st.balloons()
         st.session_state.moedas += 2500
-        st.session_state.vitoria_pendente = False
+        st.session_state.vitoria_confirmada = False
     st.rerun()
 
-# --- 7. LÓGICA DE SORTEIO (RNG) ---
+# --- 7. LÓGICA DE SORTEIO ---
 if st.session_state.moedas >= 50:
-    sorteio_vitoria = random.random() < 0.35 # 35% de chance
-    if sorteio_vitoria:
+    sorteio_win = random.random() < 0.35
+    if sorteio_win:
         venc = random.choice(list(familia_config.keys()))
         resultado = [venc] * 6
-        st.session_state.vitoria_pendente = True
+        st.session_state.vitoria_confirmada = True
     else:
         resultado = random.choices(list(familia_config.keys()), k=6)
         if len(set(resultado)) == 1: resultado = random.sample(list(familia_config.keys()), 6)
-        st.session_state.vitoria_pendente = False
+        st.session_state.vitoria_confirmada = False
 
     st.session_state.grade = resultado
-    injetar_motor_js(resultado, sorteio_vitoria)
+    injetar_motor_js(resultado, sorteio_win)
 else:
-    st.warning("Recarregue a página para ganhar mais moedas!")
+    st.error("Acabaram as moedas! Recarregue a página.")
