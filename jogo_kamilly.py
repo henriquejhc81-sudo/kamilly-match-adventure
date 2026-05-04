@@ -3,7 +3,7 @@ import random
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO DO APP (ESTABILIDADE MOBILE) ---
+# --- 1. CONFIGURAÇÃO DO APP (MODO SEM SIDEBAR) ---
 st.set_page_config(
     page_title="KAMILLY ARCADE", 
     layout="centered", 
@@ -21,7 +21,7 @@ familia_config = {
     "vovo_neusa": "vovo_neusa.jpg"
 }
 
-# --- 3. CACHE DE ASSETS (FOTOS E OS 3 SONS) ---
+# --- 3. CACHE DE ASSETS (FOTOS E SONS EM BASE64) ---
 @st.cache_data
 def carregar_assets_b64():
     memo = {"fotos": {}, "sons": {}}
@@ -36,7 +36,6 @@ def carregar_assets_b64():
         arq = f"{s}.mp3"
         if os.path.exists(arq):
             with open(arq, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode()
                 memo["sons"][s] = f"data:audio/mp3;base64,{base64.b64encode(f.read()).decode()}"
         else:
             memo["sons"][s] = ""
@@ -44,16 +43,19 @@ def carregar_assets_b64():
 
 assets = carregar_assets_b64()
 
-# Inicialização de Estados (Preserva os valores entre jogadas)
+# Estados de Sessão
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 if 'vitoria_confirmada' not in st.session_state: st.session_state.vitoria_confirmada = False
-if 'custo_pendente' not in st.session_state: st.session_state.custo_pendente = False
 
-# --- 4. CSS: DESIGN PREMIUM E NOME GIGANTE ---
+# --- 4. CSS: DESIGN PREMIUM E BLOQUEIO DE SIDEBAR ---
 st.markdown("""
     <style>
-    [data-testid="stSidebarNav"], [data-testid="collapsedControl"], header, footer { display: none !important; }
+    /* BLOQUEIO TOTAL DA BARRA LATERAL E MENUS */
+    [data-testid="stSidebar"], [data-testid="collapsedControl"], [data-testid="stSidebarNav"], header, footer {
+        display: none !important;
+        visibility: hidden !important;
+    }
     .block-container { padding-top: 1rem !important; }
     .main { background-color: #050a1a; overflow: hidden; }
 
@@ -68,7 +70,7 @@ st.markdown("""
         border: 10px solid #0055ff; border-radius: 35px;
         background: #000; padding: 0px; margin: auto;
         overflow: hidden; max-width: 310px;
-        box-shadow: 0 0 45px #0055ff;
+        box-shadow: 0 0 40px #0055ff;
         cursor: pointer; line-height: 0;
     }
 
@@ -86,7 +88,9 @@ st.markdown("""
         max-width: 200px; margin: 5px auto 15px auto;
         box-shadow: 0 0 15px #FF69B4; border: 2px solid white;
     }
-    .stButton { display: none; }
+    .stButton { display: none; } /* Esconde o botão SYNC */
+    
+    .btn-recarregar { text-align: center; margin-top: 30px; opacity: 0.3; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -113,7 +117,6 @@ def injetar_motor_js(resultado_final, ganhou):
             if (window.isSpinning) return;
             window.isSpinning = true;
             
-            // Sequência de áudio
             if ('{s1}' !== '') {{
                 audio1.play();
                 audio1.onended = function() {{ if ('{s2}' !== '') audio2.play(); }};
@@ -132,14 +135,13 @@ def injetar_motor_js(resultado_final, ganhou):
                     }});
                 }} else {{
                     clearInterval(timer);
-                    imgs.forEach((img, i) => {{ img.src = fotos[final[i]]; }});
+                    imgs.forEach((img, i) => {{ img.src = final[i]; }});
                     
                     audio1.pause(); audio2.pause();
                     if ({str(ganhou).lower()} && '{win}' !== '') {{ audioWin.play(); }}
                     
                     setTimeout(function() {{
                         window.isSpinning = false;
-                        // Aciona o SYNC no Python
                         window.parent.document.querySelectorAll('button')[0].click();
                     }}, 600);
                 }}
@@ -158,11 +160,10 @@ for nome in st.session_state.grade:
 html_roleta += '</div></div>'
 st.markdown(html_roleta, unsafe_allow_html=True)
 
-st.markdown("<p style='color:white; text-align:center; font-size:14px; margin-top:10px;'>👆 TOQUE PARA BRINCAR!</p>", unsafe_allow_html=True)
+st.markdown("<p style='color:white; text-align:center; font-size:14px; margin-top:10px;'>👆 TOQUE NAS FOTOS PARA BRINCAR!</p>", unsafe_allow_html=True)
 
-# BOTÃO SYNC - ATUALIZAÇÃO DO BÔNUS (VALOR REAL)
+# BOTÃO SYNC (Invisível)
 if st.button("SYNC"):
-    # Subtrai o valor da jogada apenas quando o giro termina
     st.session_state.moedas -= 50
     if st.session_state.vitoria_confirmada:
         st.balloons()
@@ -170,25 +171,26 @@ if st.button("SYNC"):
         st.session_state.vitoria_confirmada = False
     st.rerun()
 
-# --- 7. LÓGICA DE SORTEIO (RNG) ---
+# --- 7. LÓGICA DE SORTEIO ---
 if st.session_state.moedas >= 50:
-    sorteio_win = random.random() < 0.35
+    sorteio_win = random.random() < 0.35 
     if sorteio_win:
         venc = random.choice(list(familia_config.keys()))
         resultado = [venc] * 6
         st.session_state.vitoria_confirmada = True
     else:
         resultado = random.choices(list(familia_config.keys()), k=6)
-        if len(set(resultado)) == 1: 
-            resultado = random.sample(list(familia_config.keys()), 6)
+        if len(set(resultado)) == 1: resultado = random.sample(list(familia_config.keys()), 6)
         st.session_state.vitoria_confirmada = False
 
-    # Define a grade que será mostrada APÓS a animação do JavaScript
     st.session_state.grade = resultado
     injetar_motor_js(resultado, sorteio_win)
 else:
-    st.error("Acabaram as moedas! Recarregue a página.")
+    st.error("Acabaram as moedas!")
 
-if st.sidebar.button("🔄 RECARREGAR"):
+# BOTÃO DE RECARREGAR (Fora da Sidebar para ela não abrir)
+st.markdown('<div class="btn-recarregar">', unsafe_allow_html=True)
+if st.button("🔄 RECARREGAR (CLIQUE AQUI)"):
     st.session_state.moedas = 1000
     st.rerun()
+st.markdown('</div>', unsafe_allow_html=True)
