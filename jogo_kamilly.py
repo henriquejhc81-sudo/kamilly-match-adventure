@@ -3,7 +3,7 @@ import random
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO DE SEGURANÇA MÁXIMA ---
+# --- 1. CONFIGURAÇÃO DE SEGURANÇA TOTAL ---
 st.set_page_config(
     page_title="KAMILLY ARCADE", 
     layout="centered", 
@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. BIBLIOTECA DE PERSONAGENS (11 IMAGENS PRESERVADAS) ---
+# --- 2. BIBLIOTECA DE PERSONAGENS (11 IMAGENS) ---
 familia_config = {
     "kamilly": "kamilly.jpg", "kauan": "kauan.jpg", "mamae": "mamae.jpg", 
     "papai": "papai.jpg", "tio_michel": "tio_michel.jpg", "tio_mk": "tio_mk.jpg", 
@@ -41,39 +41,41 @@ def carregar_assets_b64():
 
 assets = carregar_assets_b64()
 
-# Inicialização Robusta de Estados
+# Inicialização de Estados
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 if 'vitoria_pendente' not in st.session_state: st.session_state.vitoria_pendente = False
 
-# --- 4. CSS NUCLEAR (ESCONDE TUDO E FIXA O BÔNUS) ---
+# --- 4. CSS NUCLEAR (BLOQUEIA TELAS EXTRAS E FIXA DESIGN) ---
 st.markdown("""
     <style>
-    /* REMOVE ABSOLUTAMENTE TUDO DO STREAMLIT (HEADER, FOOTER, TOOLBAR) */
-    [data-testid="stHeader"], [data-testid="stFooter"], .stDeployButton, 
-    [data-testid="stToolbar"], [data-testid="stSidebar"], 
-    [data-testid="collapsedControl"], footer, header {
+    /* BLOQUEIO SUPREMO: Esconde barra de convite, menu, cabeçalho e Manage App */
+    header, footer, .stDeployButton, [data-testid="stToolbar"], 
+    [data-testid="stSidebar"], [data-testid="collapsedControl"],
+    .stAppViewContainer > section:nth-child(2) {
         display: none !important;
         visibility: hidden !important;
-        height: 0 !important;
     }
     
-    .block-container { padding-top: 0rem !important; margin-top: -30px !important; }
+    /* Limpa o topo e o fundo */
+    .block-container { padding-top: 0rem !important; margin-top: -20px !important; }
     .main { background-color: #050a1a; overflow: hidden; }
 
-    /* NOME KAMILLY GIGANTE */
+    /* NOME KAMILLY MEGA NEON */
     .mega-title { 
-        color: #FF69B4; text-align: center; font-size: 85px; 
+        color: #FF69B4; text-align: center; font-size: 80px; 
         font-family: 'Comic Sans MS', cursive;
-        text-shadow: 0 0 25px #FF69B4, 4px 4px #fff;
-        margin: 15px 0 5px 0 !important; font-weight: bold; line-height: 1;
+        text-shadow: 0 0 20px #FF69B4, 4px 4px #fff;
+        margin: 10px 0 0px 0 !important; font-weight: bold; line-height: 1;
     }
 
+    /* QUADRO AZUL (BOTÃO TOUCH) */
     .arcade-frame {
         border: 12px solid #0055ff; border-radius: 40px;
         background: #000; padding: 0px; margin: auto;
         overflow: hidden; max-width: 310px;
         box-shadow: 0 0 50px #0055ff; cursor: pointer; line-height: 0;
+        z-index: 99; position: relative;
     }
 
     .grid-container {
@@ -81,25 +83,23 @@ st.markdown("""
         grid-gap: 0px; width: 100%;
     }
 
-    .grid-container img { width: 100%; height: 160px; object-fit: cover; display: block; pointer-events: none; }
+    .grid-container img { width: 100%; height: 165px; object-fit: cover; display: block; pointer-events: none; }
 
+    /* MARCADOR DE BÔNUS (MOEDAS) */
     .moedas-banner {
-        background: linear-gradient(90deg, #FFB6C1, #FF69B4);
-        color: white; padding: 12px; border-radius: 50px;
-        font-size: 35px; font-weight: bold; text-align: center;
+        background: linear-gradient(180deg, #FFB6C1 0%, #FF69B4 100%);
+        color: white; padding: 10px; border-radius: 50px;
+        font-size: 38px; font-weight: bold; text-align: center;
         max-width: 220px; margin: 10px auto;
-        box-shadow: 0 0 25px #FF69B4; border: 2px solid white;
+        box-shadow: 0 0 30px #FF69B4; border: 3px solid white;
     }
     
-    /* BOTÃO DE SINCRONIA TOTALMENTE ESCONDIDO */
-    .stButton button {
-        position: fixed; top: -100px; left: -100px;
-        visibility: hidden;
-    }
+    /* Esconde botões do sistema */
+    .stButton button { position: fixed; top: -500px; opacity: 0; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. MOTOR DE SOM E GIRO JAVASCRIPT ---
+# --- 5. MOTOR JAVASCRIPT (SOM E GIRO) ---
 def injetar_motor_js(resultado_final, ganhou):
     fotos_js = str(assets["fotos"]).replace("'", '"')
     s1, s2, win = assets["sons"]["spin"], assets["sons"]["spin2"], assets["sons"]["win"]
@@ -122,6 +122,7 @@ def injetar_motor_js(resultado_final, ganhou):
             if (window.isSpinning) return;
             window.isSpinning = true;
             
+            // Sequência de áudio
             if ('{s1}' !== '') {{
                 audio1.play();
                 audio1.onended = function() {{ if ('{s2}' !== '') audio2.play(); }};
@@ -144,9 +145,8 @@ def injetar_motor_js(resultado_final, ganhou):
                     
                     setTimeout(function() {{
                         window.isSpinning = false;
-                        // Força o clique no primeiro botão que encontrar (nosso SYNC)
-                        var btn = window.parent.document.querySelector('button');
-                        if(btn) btn.click();
+                        // Aciona a cobrança e prêmio no Python
+                        window.parent.document.querySelector('button').click();
                     }}, 600);
                 }}
             }}, 60);
@@ -154,28 +154,29 @@ def injetar_motor_js(resultado_final, ganhou):
         </script>
     """, height=0)
 
-# --- 6. INTERFACE VISUAL ---
+# --- 6. INTERFACE ---
 st.markdown("<p class='mega-title'>Kamilly</p>", unsafe_allow_html=True)
 st.markdown(f"<div class='moedas-banner'>💰 ${st.session_state.moedas}</div>", unsafe_allow_html=True)
 
+# Quadro da Roleta
 html_grade = '<div class="arcade-frame"><div class="grid-container">'
 for nome in st.session_state.grade:
     html_grade += f'<img src="{assets["fotos"].get(nome)}">'
 html_grade += '</div></div>'
 st.markdown(html_grade, unsafe_allow_html=True)
 
-st.markdown("<p style='color:white; text-align:center; font-size:16px; margin-top:15px; font-weight:bold;'>👆 TOQUE NAS FOTOS PARA JOGAR!</p>", unsafe_allow_html=True)
+st.markdown("<p style='color:white; text-align:center; font-size:16px; margin-top:10px; font-weight:bold;'>👆 TOQUE PARA JOGAR!</p>", unsafe_allow_html=True)
 
-# BOTÃO SYNC (LÓGICA DO BÔNUS CORRIGIDA)
+# BOTÃO DE ATUALIZAÇÃO (MOEDAS)
 if st.button("SYNC"):
-    st.session_state.moedas -= 50  # Subtrai o valor da jogada
+    st.session_state.moedas -= 50 # Tira 50 por rodada
     if st.session_state.vitoria_pendente:
         st.balloons()
-        st.session_state.moedas += 3000 # Soma o prêmio
+        st.session_state.moedas += 3000 # Ganha 3000
         st.session_state.vitoria_pendente = False
     st.rerun()
 
-# --- 7. LÓGICA DE SORTEIO ---
+# --- 7. LÓGICA DE SORTEIO (RNG) ---
 if st.session_state.moedas >= 50:
     sorteio_vitoria = random.random() < 0.35 
     if sorteio_vitoria:
@@ -190,7 +191,6 @@ if st.session_state.moedas >= 50:
     st.session_state.grade = resultado
     injetar_motor_js(resultado, sorteio_vitoria)
 else:
-    # Se acabar as moedas, mostra botão de recarga centralizado
-    if st.button("🔄 RECARREGAR MOEDAS", key="recharge"):
+    if st.button("🔄 RECARREGAR MOEDAS"):
         st.session_state.moedas = 1000
         st.rerun()
