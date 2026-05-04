@@ -3,7 +3,7 @@ import random
 import os
 import base64
 
-# --- 1. CONFIGURAÇÃO DE SEGURANÇA E PERFORMANCE ---
+# --- 1. CONFIGURAÇÃO DE SEGURANÇA MÁXIMA ---
 st.set_page_config(
     page_title="KAMILLY ARCADE", 
     layout="centered", 
@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. BANCO DE DADOS COMPLETO (11 PERSONAGENS) ---
+# --- 2. BIBLIOTECA DE PERSONAGENS (11 IMAGENS PRESERVADAS) ---
 familia_config = {
     "kamilly": "kamilly.jpg", "kauan": "kauan.jpg", "mamae": "mamae.jpg", 
     "papai": "papai.jpg", "tio_michel": "tio_michel.jpg", "tio_mk": "tio_mk.jpg", 
@@ -41,32 +41,32 @@ def carregar_assets_b64():
 
 assets = carregar_assets_b64()
 
-# Inicialização de Estados
+# Inicialização Robusta de Estados
 if 'moedas' not in st.session_state: st.session_state.moedas = 1000
 if 'grade' not in st.session_state: st.session_state.grade = ["kamilly"] * 6
 if 'vitoria_pendente' not in st.session_state: st.session_state.vitoria_pendente = False
 
-# --- 4. CSS: BLOQUEIO TOTAL E DESIGN ULTRA ROSA ---
+# --- 4. CSS NUCLEAR (ESCONDE TUDO E FIXA O BÔNUS) ---
 st.markdown("""
     <style>
-    /* BLOQUEIA CABEÇALHO, RODAPÉ E BOTÕES DE COMPARTILHAMENTO */
-    header, footer, .stDeployButton, [data-testid="stToolbar"], [data-testid="stSidebar"], [data-testid="collapsedControl"] {
+    /* REMOVE ABSOLUTAMENTE TUDO DO STREAMLIT (HEADER, FOOTER, TOOLBAR) */
+    [data-testid="stHeader"], [data-testid="stFooter"], .stDeployButton, 
+    [data-testid="stToolbar"], [data-testid="stSidebar"], 
+    [data-testid="collapsedControl"], footer, header {
         display: none !important;
         visibility: hidden !important;
+        height: 0 !important;
     }
-    .block-container { padding-top: 0rem !important; margin-top: -10px !important; }
+    
+    .block-container { padding-top: 0rem !important; margin-top: -30px !important; }
     .main { background-color: #050a1a; overflow: hidden; }
 
-    /* NOME KAMILLY ÚNICO E GIGANTE */
+    /* NOME KAMILLY GIGANTE */
     .mega-title { 
-        color: #FF69B4; 
-        text-align: center; 
-        font-size: 85px; 
+        color: #FF69B4; text-align: center; font-size: 85px; 
         font-family: 'Comic Sans MS', cursive;
-        text-shadow: 0 0 20px #FF69B4, 0 0 40px #FF69B4, 4px 4px #fff;
-        margin: 10px 0 5px 0 !important;
-        font-weight: bold;
-        line-height: 1;
+        text-shadow: 0 0 25px #FF69B4, 4px 4px #fff;
+        margin: 15px 0 5px 0 !important; font-weight: bold; line-height: 1;
     }
 
     .arcade-frame {
@@ -85,12 +85,17 @@ st.markdown("""
 
     .moedas-banner {
         background: linear-gradient(90deg, #FFB6C1, #FF69B4);
-        color: white; padding: 10px; border-radius: 50px;
-        font-size: 30px; font-weight: bold; text-align: center;
-        max-width: 200px; margin: 10px auto;
-        box-shadow: 0 0 20px #FF69B4; border: 2px solid white;
+        color: white; padding: 12px; border-radius: 50px;
+        font-size: 35px; font-weight: bold; text-align: center;
+        max-width: 220px; margin: 10px auto;
+        box-shadow: 0 0 25px #FF69B4; border: 2px solid white;
     }
-    .stButton { display: none; }
+    
+    /* BOTÃO DE SINCRONIA TOTALMENTE ESCONDIDO */
+    .stButton button {
+        position: fixed; top: -100px; left: -100px;
+        visibility: hidden;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -139,7 +144,9 @@ def injetar_motor_js(resultado_final, ganhou):
                     
                     setTimeout(function() {{
                         window.isSpinning = false;
-                        window.parent.document.querySelectorAll('button').click(); // Dispara o SYNC no Python
+                        // Força o clique no primeiro botão que encontrar (nosso SYNC)
+                        var btn = window.parent.document.querySelector('button');
+                        if(btn) btn.click();
                     }}, 600);
                 }}
             }}, 60);
@@ -157,14 +164,14 @@ for nome in st.session_state.grade:
 html_grade += '</div></div>'
 st.markdown(html_grade, unsafe_allow_html=True)
 
-st.markdown("<p style='color:white; text-align:center; font-size:16px; margin-top:10px; font-weight:bold;'>👆 TOQUE NAS FOTOS PARA JOGAR!</p>", unsafe_allow_html=True)
+st.markdown("<p style='color:white; text-align:center; font-size:16px; margin-top:15px; font-weight:bold;'>👆 TOQUE NAS FOTOS PARA JOGAR!</p>", unsafe_allow_html=True)
 
-# BOTÃO SYNC (LÓGICA DO BÔNUS)
+# BOTÃO SYNC (LÓGICA DO BÔNUS CORRIGIDA)
 if st.button("SYNC"):
-    st.session_state.moedas -= 50 # Subtrai custo da rodada
+    st.session_state.moedas -= 50  # Subtrai o valor da jogada
     if st.session_state.vitoria_pendente:
         st.balloons()
-        st.session_state.moedas += 3000 # Soma prêmio
+        st.session_state.moedas += 3000 # Soma o prêmio
         st.session_state.vitoria_pendente = False
     st.rerun()
 
@@ -183,6 +190,7 @@ if st.session_state.moedas >= 50:
     st.session_state.grade = resultado
     injetar_motor_js(resultado, sorteio_vitoria)
 else:
+    # Se acabar as moedas, mostra botão de recarga centralizado
     if st.button("🔄 RECARREGAR MOEDAS", key="recharge"):
         st.session_state.moedas = 1000
         st.rerun()
